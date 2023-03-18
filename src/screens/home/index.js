@@ -15,6 +15,7 @@ import {
   StyleSheet,
   FlatList,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import { data } from "../../data/data";
 import { COLOR, SIZES, FONTS ,icons} from "../../constants";
 import { User, Key } from "../../icons";
@@ -23,7 +24,11 @@ const { width, height } = Dimensions.get("window");
 export function Home({ route, navigation }) {
   
   console.log(data);
-
+  const dataTest = [{
+    id:'1',
+    name: 'One'
+  }]
+   AsyncStorage.setItem("cart",JSON.stringify(dataTest))
 
 //Rendering
   function renderMyFoodsection(foods) {

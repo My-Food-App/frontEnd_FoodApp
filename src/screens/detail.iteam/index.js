@@ -10,13 +10,15 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-
+import AsyncStorage from "@react-native-async-storage/async-storage"
 import CheckboxList from 'rn-checkbox-list';
 import { COLOR, SIZES, FONTS ,icons} from "../../constants";
 import { data as listData,dataDetail } from '../../data/data';
 const {width, height} = Dimensions.get('window');
 
 export const DetailItem = ({route, navigation}) => {
+  // const [cart, setCart] = useState([{'a':1}]);
+  var cart = []
   const [isSelected, setSelection] = useState(false);
   const [data, setData] = useState(null);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -25,7 +27,7 @@ export const DetailItem = ({route, navigation}) => {
     let {data} = route.params;
     setData(data);
     setTotalPrice(data.price);
-    console.log(data);
+    console.log( 'data',data);
   }, [data]);
 
   function renderDetailItem(data) {
@@ -125,7 +127,15 @@ export const DetailItem = ({route, navigation}) => {
             justifyContent:'center',
             alignItems:'center'
           }}>
-            <TouchableOpacity><Text>Thêm vào giỏ hàng - {totalPrice+totalPriceOption}</Text></TouchableOpacity>
+            <TouchableOpacity
+                onPress={async () =>{            
+                   await AsyncStorage.getItem("cart").then((result) => {
+                    console.log('resurl',result)
+                });
+                }}
+            >
+              <Text>Thêm vào giỏ hàng - {totalPrice+totalPriceOption}</Text>
+            </TouchableOpacity>
           </View>
       </View>
     );
