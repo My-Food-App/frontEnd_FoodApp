@@ -88,7 +88,7 @@ export const DetailItem = ({route, navigation}) => {
       
       <View style={{height: 400,}}>
         <CheckboxList
-          headerName="Option"
+          headerName="Tất cả"
           theme="red"
           listItems={data}
           renderItem={renderItem}
@@ -125,7 +125,7 @@ export const DetailItem = ({route, navigation}) => {
             justifyContent:'center',
             alignItems:'center'
           }}>
-            <Text>Thêm vào giỏ hàng - {totalPrice+totalPriceOption}</Text>
+            <TouchableOpacity><Text>Thêm vào giỏ hàng - {totalPrice+totalPriceOption}</Text></TouchableOpacity>
           </View>
       </View>
     );

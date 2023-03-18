@@ -22,15 +22,7 @@ export function MyStoreInfomation({navigation}) {
   function renderHeader() {
     return (
       <View
-        style={{
-          flexDirection: 'row',
-          paddingHorizontal: SIZES.radius,
-          height: 80,
-          width: width,
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          backgroundColor: COLOR.WHITE,
-        }}>
+        style={styles.headerContainer}>
         <TouchableOpacity
           style={{marginLeft: SIZES.base}}
           onPress={() => navigation.goBack()}>
@@ -65,10 +57,14 @@ export function MyStoreInfomation({navigation}) {
 
   function renderContent() {
     return (
-      <ScrollView style={styles.containerContent}>
+      <View style={styles.containerContent}>
         <TouchableOpacity style={styles.inforContent}>
           <Text style={styles.textImfor}>Tên Shop:</Text>
-          <TextInput placeholder="Tên Shop" />
+          <TextInput placeholder="Tên Shop" style={styles.textInput}/>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.inforContent}>
+          <Text style={styles.textImfor}>Mô tả</Text>
+          <TextInput placeholder="Mô tả"  style={styles.textInput}/>
         </TouchableOpacity>
         <TouchableOpacity style={styles.inforContent}>
           <Text style={styles.textImfor}>Địa chỉ lấy hàng:</Text>
@@ -82,21 +78,17 @@ export function MyStoreInfomation({navigation}) {
           <Text style={styles.textImfor}>Số điện thoại:</Text>
           <Text style={styles.textImfor}>0829492559</Text>
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity style={styles.inforContent}>
         <Text style={styles.textImfor}>Chọn ảnh:</Text>
-          {/* <Image 
-          source={{uri:'https://phutungnhapkhauchinhhang.com/wp-content/uploads/2020/06/default-thumbnail.jpg'}}
-            resizeMode="contain"
-            style={{
-              width: 100,
-              height: 70,
-              justifyContent:'center',
-              alignSelf:'center'
-            }}
-          /> */}
-          <Icon name="image" size={70} color="#900" />
+          <Icon name="image" size={70} style={{ alignSelf:'center'}}/>
         </TouchableOpacity>
-      </ScrollView>
+        <View>
+        <TouchableOpacity onPress={console.log('click')} style={styles.btnSave}> 
+          <Text style={styles.txtSave}>Lưu</Text>
+          </TouchableOpacity>
+        </View>
+
+      </View>
     );
   }
 
@@ -108,27 +100,52 @@ export function MyStoreInfomation({navigation}) {
         backgroundColor: COLOR.GREY_LIGHT,
       }}>
       <View>{renderHeader()}</View>
-      <View>{renderContent()}</View>
+      <ScrollView>{renderContent()}</ScrollView>
     </View>
   );
 }
 const styles = StyleSheet.create({
   containerContent: {
-    marginVertical: 20,
     backgroundColor: COLOR.WHITE,
     width: width,
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingVertical: 10,
   },
   inforContent:{
     borderBottomWidth:1,
     borderBottomColor:COLOR.lightGray4,
-    marginVertical:20,
-    // backgroundColor:'red'
+    marginVertical:10,
+
   },
   textImfor:{
     fontSize:20,
     color:COLOR.BLACK,
+    marginBottom:10,
+  },
+  textInput:{
+   marginTop: -10
+  },
+  headerContainer:{
+    flexDirection: 'row',
+    paddingHorizontal: SIZES.radius,
+    height: 80,
+    width: width,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: COLOR.WHITE,
     marginBottom:10
+  },
+  txtSave:{
+      alignSelf:'center',
+      fontSize:24,
+      color:COLOR.WHITE
+  },
+  btnSave:{
+    alignSelf:'flex-end',
+    justifyContent:'center',
+    backgroundColor:COLOR.MAIN,
+    height:50,
+    width:100,
+    borderRadius:10
   }
 });

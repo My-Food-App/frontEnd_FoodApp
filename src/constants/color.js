@@ -10,14 +10,15 @@ const COLOR = {
     ACCENT: "#C29C1D",
     GREEN: "#84CA93",
     PURPLE: "#A183E0",
-    YELLOW: "FFA902",
-    PRIMARY_LIGHT: "C8EDD9",
+    YELLOW: "yellow",
+    PRIMARY_LIGHT: "#C8EDD9",
     BLUE:"blue",
     lightGray: '#64676D',
   lightGray2: '#EFEFF0',
   lightGray3: '#D4D5D6',
   lightGray4: '#7D7E84',
   lightGray5: '#ECECEC',
+  ORGANGE: '#ff6400'
 }
 export {
     COLOR

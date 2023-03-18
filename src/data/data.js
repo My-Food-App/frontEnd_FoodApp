@@ -280,3 +280,14 @@ export const dataActivities = [
   },
   {_id: 6, name: 'Ví Coupon', icon: icons.coupon_icon},
 ];
+
+export const myStore = {
+  name: "The store",
+  description:"Một dĩa Cơm tấm thường được phục vụ kèm với một chén nước mắm và một chén canh, trên cùng dĩa ăn sẽ là một miếng sườn nướng và xung quanh là các món ăn mặn kèm khác cùng với mỡ hành được rưới lên trên cùngh",
+  image:"https://cdn.pixabay.com/photo/2020/04/17/19/48/city-5056657__340.png",
+  userId: "1234",
+  address: "abc",
+  productOfStore: [],
+  status: true
+
+}

@@ -132,7 +132,7 @@ export function Home({ route, navigation }) {
             alignItems: 'center',
           }}
           onPress={() =>
-            navigation.navigate('DetaiStore', {
+            navigation.navigate('DetailStore', {
               data: item,
             })
           }>
@@ -203,7 +203,87 @@ export function Home({ route, navigation }) {
     );
   }
 
+  const CarouselAutoScroll = useCallback((data, interval) => {
+    console.log(data);
+    const imageRef = useRef();
+    const [active, setActive] = useState(0);
+    const indexRef = useRef(active);
+    indexRef.current = active;
 
+    useInterval(() => {
+      if (active < Number(data?.length) - 1) {
+        setActive(active + 1);
+      } else {
+        setActive(0);
+      }
+    }, interval);
+
+    useEffect(() => {
+      imageRef.current.scrollToIndex({index: active, animated: true});
+    }, [active]);
+
+    const onViewableItemsChangedHandler = useCallback(
+      ({viewableItems, changed}) => {
+        if (active != 0) {
+          setActive(viewableItems[0].index);
+        }
+      },
+      [],
+    );
+    const onViewableItemsChanged = useCallback(({viewableItems, changed}) => {
+      if (active != 0) {
+        setActive(viewableItems[0].index);
+      }
+    }, []);
+    const viewabilityConfigCallbackPairs = useRef([{onViewableItemsChanged}]);
+    return (
+      <FlatList
+        showsHorizontalScrollIndicator={false}
+        //  onViewableItemsChanged={onViewableItemsChangedHandler}
+        viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
+        viewabilityConfig={{
+          itemVisiblePercentThreshold: 50,
+        }}
+        ref={imageRef}
+        pagingEnabled
+        data={data}
+        horizontal
+        renderItem={({item, index}) => (
+          <Image
+            source={{
+              uri: item.image,
+            }}
+            resizeMode="cover"
+            style={{
+              width: width * 0.9,
+              height: 150,
+              borderRadius: 20,
+              marginVertical: 10,
+              marginHorizontal: width * 0.05,
+            }}
+          />
+        )}
+      />
+    );
+  }, []);
+
+  const useInterval = (callback, delay) => {
+    const savedCallback = useRef();
+
+    useEffect(() => {
+      savedCallback.current = callback;
+    }, [callback]);
+
+    useEffect(() => {
+      const tick = () => {
+        savedCallback.current();
+      };
+      if (delay !== null) {
+        let id = setInterval(tick, delay);
+        return () => clearInterval(id);
+      }
+    }, [delay]);
+  };
 
   return (
     <View
@@ -278,7 +358,7 @@ export function Home({ route, navigation }) {
         {/* <View style={{height: 170}}>
           <Slider></Slider>
         </View> */}
-        {/* <View style={{flex: 3, backgroundColor: Colors.white}}>
+        {/* <View style={{flex: 3, backgroundColor: COLOR.WHITE}}>
           {CarouselAutoScroll(data, 3000)}
         </View> */}
         <View
