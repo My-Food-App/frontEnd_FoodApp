@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 const {width, height} = Dimensions.get('window');
 import {myStore,dataDetail} from '../../data/data';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
@@ -265,6 +266,13 @@ export function MyStore({navigation}) {
         {tab == 3 && (<ScrollView>
           <Text>3</Text>
         </ScrollView>)}
+         <TouchableOpacity
+          onPress={() =>{
+           navigation.navigate("CreateProduct")
+          }}
+         >
+         <Ionicons name="add-circle-outline" size={50} style={styles.iconAdd} color={COLOR.BLACK} />
+         </TouchableOpacity>
       </View>
     );
   } else {
@@ -286,7 +294,8 @@ export function MyStore({navigation}) {
 const styles = StyleSheet.create({
   container:{
     flex:1,
-    backgroundColor:COLOR.WHITE
+    backgroundColor:COLOR.WHITE,
+    position:'relative'
   },
   containerAddStore: {
     marginVertical: 50,
@@ -317,4 +326,9 @@ const styles = StyleSheet.create({
     height: 50,
     flexDirection: 'row',
   },
+  iconAdd:{
+    position:'absolute',
+    bottom:10,
+    right:10
+  }
 });
