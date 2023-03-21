@@ -18,7 +18,7 @@ const {width, height} = Dimensions.get('window');
 
 export const DetailItem = ({route, navigation}) => {
   // const [cart, setCart] = useState([{'a':1}]);
-  var cart = []
+  const [cart, setCart] = useState([]);
   const [isSelected, setSelection] = useState(false);
   const [data, setData] = useState(null);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -29,7 +29,16 @@ export const DetailItem = ({route, navigation}) => {
     setTotalPrice(data.price);
     console.log( 'data',data);
   }, [data]);
-
+  useEffect(() => {
+    AsyncStorage.getItem('cart').then(result => {
+      console.log('resurl', JSON.parse(result));
+      setCart(JSON.parse(result));
+    });
+  }, []);
+  useEffect(() => {
+    AsyncStorage.setItem("cart",JSON.stringify(cart))
+    console.log('cart',cart)
+  },[cart])
   function renderDetailItem(data) {
     return (
       <View>
@@ -65,6 +74,7 @@ export const DetailItem = ({route, navigation}) => {
             <Text style={{color: COLOR.lightGray, fontSize: 18}}>Giá gốc</Text>
           </View>
         </View>
+        <View style={styles.descriptionContainer}><Text numberOfLines={2} style={styles.txtDescription}>{data.description}</Text></View>
       </View>
     );
   }
@@ -102,7 +112,23 @@ export const DetailItem = ({route, navigation}) => {
       </View>
     );
   }
+  
+  function render(){
+    return(<View style={styles.renderContainer}>
+     <View style={styles.styleNotification}>
+     <Text style={{color:COLOR.BLACK, fontSize:18, fontWeight:'500', marginRight:15}}>Thêm lưu ý cho quán</Text>
+      <Text>Không bắt buộc</Text>
+     </View>
+     <TouchableOpacity style={styles.btnNotification}><Text>Tùy thuộc vào khả năng của quán</Text></TouchableOpacity>
+    </View>)
+  }
 
+  const addToCart =  () =>{
+    const newCart = [...cart]
+    newCart.push(data)
+    console.log('addtoCart',)  
+    setCart(newCart)
+  }
   if (data) {
     return (
       <View
@@ -113,28 +139,29 @@ export const DetailItem = ({route, navigation}) => {
           <View style={{backgroundColor: COLOR.WHITE}}>
             {renderDetailItem(data)}
           </View>
-          <View style={{marginTop: 10}}>{renderOptionData(data.option)}</View>
+          <View style={{height:10,backgroundColor:COLOR.BLUE_GRAY}}></View>
+          {/* <View style={{marginTop: 10}}>{renderOptionData(data.option)}</View> */}
+          <View>{render()}</View>
         </ScrollView>
 
         <View
           style={{
             position: 'relative',
-            height: height*0.07,
-            backgroundColor: 'yellow',
-            marginBottom:10,
+            height: 50,
+            backgroundColor: COLOR.MAIN,
+            marginBottom:15,
             marginHorizontal:20,
             borderRadius:10,
             justifyContent:'center',
             alignItems:'center'
           }}>
             <TouchableOpacity
-                onPress={async () =>{            
-                   await AsyncStorage.getItem("cart").then((result) => {
-                    console.log('resurl',result)
-                });
+                onPress={async () =>{ 
+                  console.log('add')           
+                   addToCart()
                 }}
             >
-              <Text>Thêm vào giỏ hàng - {totalPrice+totalPriceOption}</Text>
+              <Text style={{fontSize:18, fontWeight:'600'}}>Thêm vào giỏ hàng - {totalPrice+totalPriceOption}</Text>
             </TouchableOpacity>
           </View>
       </View>
@@ -142,3 +169,32 @@ export const DetailItem = ({route, navigation}) => {
   } else return <></>;
 };
 
+const styles = StyleSheet.create({
+  descriptionContainer: {
+    marginHorizontal: 20,
+    marginBottom:10
+  },
+  txtDescription:{
+    fontSize:15,
+    
+  },
+  renderContainer:{
+    marginHorizontal:20,
+    marginVertical:20,
+   
+  },
+  styleNotification:{
+     flexDirection:'row',
+    alignItems: 'center',
+    height:40,
+    paddingBottom:10,
+
+  },
+  btnNotification:{
+    height:50,
+    borderColor:COLOR.lightGray2,
+    borderBottomWidth:1,
+    borderTopWidth:1,
+    justifyContent: 'center',
+  }
+});

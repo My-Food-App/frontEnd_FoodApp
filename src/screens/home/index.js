@@ -24,10 +24,23 @@ const { width, height } = Dimensions.get("window");
 export function Home({ route, navigation }) {
   
   console.log(data);
-  const dataTest = [{
-    id:'1',
-    name: 'One'
-  }]
+  const dataTest = [
+    {
+    _id:'11111',
+    name: 'One',
+    price: 10000,
+    quantity:4,
+    total: 40000
+  },
+  {
+    _id:'21111',
+    name: 'Two',
+    price: 10000,
+    quantity:2,
+    total: 20000
+  }
+
+]
    AsyncStorage.setItem("cart",JSON.stringify(dataTest))
 
 //Rendering
@@ -335,7 +348,9 @@ export function Home({ route, navigation }) {
             justifyContent: 'space-evenly',
             alignItems: 'center',
           }}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={()=>{
+            navigation.navigate("Cart")
+          }}>
             <Image
               source={icons.cart_icon}
               resizeMode="contain"
