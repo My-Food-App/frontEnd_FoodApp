@@ -41,7 +41,7 @@ export function Home({ route, navigation }) {
   }
 
 ]
-   AsyncStorage.setItem("cart",JSON.stringify(dataTest))
+  //  AsyncStorage.setItem("cart",JSON.stringify(dataTest))
 
 //Rendering
   function renderMyFoodsection(foods) {

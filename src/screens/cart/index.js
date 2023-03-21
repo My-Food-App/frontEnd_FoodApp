@@ -76,6 +76,7 @@ export function Cart({navigation}) {
             <View style={{flexDirection: 'row', alignItems:'center'}}>
               <TouchableOpacity 
               style={styles.btnContainer}
+              disabled={item.quantity <= 1}
               onPress={ async () =>{
                await minus(index)
                .then(() => { 
