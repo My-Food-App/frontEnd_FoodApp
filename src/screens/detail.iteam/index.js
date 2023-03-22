@@ -22,13 +22,14 @@ export const DetailItem = ({route, navigation}) => {
   const [cart, setCart] = useState([]);
   const [isSelected, setSelection] = useState(false);
   const [data, setData] = useState(null);
+  const [price, setPrice] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalPriceOption, setTotalPriceOption] = useState(0);
   const [quantity, setQuantity] = useState(1);
   useEffect(() => {
     let {data} = route.params;
     setData(data);
-    setTotalPrice(data.price);
+    setPrice(data.price);
     console.log('data', data);
   }, [data]);
   useEffect(() => {
@@ -174,7 +175,7 @@ export const DetailItem = ({route, navigation}) => {
 
   const addToCart = () => {
     const newCart = [...cart];
-    const newData = {...data,quantity,total:totalPrice}
+    const newData = {...data,quantity,total:price*quantity + totalPriceOption*quantity}
     newCart.push(newData);
     console.log('addtoCart');
     setCart(newCart);
@@ -211,7 +212,7 @@ export const DetailItem = ({route, navigation}) => {
               addToCart();
             }}>
             <Text style={{fontSize: 18, fontWeight: '600'}}>
-              Thêm vào giỏ hàng - {totalPrice + totalPriceOption}
+              Thêm vào giỏ hàng - {price*quantity + totalPriceOption}
             </Text>
           </TouchableOpacity>
         </View>

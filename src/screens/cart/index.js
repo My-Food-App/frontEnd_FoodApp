@@ -11,6 +11,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   TextInput,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
@@ -27,6 +28,10 @@ export function Cart({navigation}) {
       setCart(JSON.parse(result));
     });
   }, []);
+  useEffect(() => {
+    AsyncStorage.setItem('cart', JSON.stringify(cart));
+    console.log('newcart', cart);
+  }, [cart]);
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -36,36 +41,73 @@ export function Cart({navigation}) {
         <Text style={{fontSize: 20, color: COLOR.BLACK, fontWeight: '600'}}>
           Giỏ hàng
         </Text>
-        <TouchableOpacity style={{}}>
-          <Text style={styles.txtDelete}>Xóa</Text>
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert('Thông báo', 'Bạn có chắc muốn xóa hết ?', [
+              {
+                text: 'Hủy',
+                onPress: () => console.log('Cancel Pressed'),
+                style: 'cancel',
+              },
+              {text: 'Có', onPress: () => setCart([])},
+            ]);
+          }}>
+          <Text style={styles.txtDelete}>Xóa hết</Text>
         </TouchableOpacity>
       </View>
     );
   }
   function renderProduct(data) {
-
-    const renderItem = ({item,index}) => {
-       const plus = async (index) => {
-          const newCart = [...cart]
-          const c = newCart[index].total/ newCart[index].quantity
-          newCart[index].quantity +=1
-          newCart[index].total += c 
-          setCart(newCart)
-       }
-       const minus = async (index) => {
-        const newCart = [...cart]
-        const c = newCart[index].total/ newCart[index].quantity
-        newCart[index].quantity -=1
-        newCart[index].total -= c 
-        setCart(newCart)
-     }
+    const renderItem = ({item, index}) => {
+      const plus = async index => {
+        const newCart = [...cart];
+        const c = newCart[index].total / newCart[index].quantity;
+        newCart[index].quantity += 1;
+        newCart[index].total += c;
+        setCart(newCart);
+      };
+      const minus = async index => {
+        const newCart = [...cart];
+        const c = newCart[index].total / newCart[index].quantity;
+        newCart[index].quantity -= 1;
+        newCart[index].total -= c;
+        setCart(newCart);
+      };
+      const handleDeleteItem = async index => {
+        const newCart = [...cart];
+        newCart.splice(index, 1);
+        console.log('delete item', cart);
+        setCart(newCart);
+      };
       return (
         <TouchableOpacity
           style={styles.itemContainer}
           onPress={() => {
-            console.log('Product',cart[index]);
+            console.log('Product', cart[index]);
           }}>
-          <Text style={styles.txtName}>{item.name}</Text>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+            <Text numberOfLines={1} style={styles.txtName}>
+              {item.name}
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                Alert.alert('Thông báo', 'Bạn có chắc muốn xóa?', [
+                  {
+                    text: 'Hủy',
+                    onPress: () => console.log('Cancel Pressed'),
+                    style: 'cancel',
+                  },
+                  {text: 'Có', onPress: () => handleDeleteItem(index)},
+                ]);
+              }}>
+              <AntDesign name="close" size={25} color={COLOR.RED} />
+            </TouchableOpacity>
+          </View>
           <View
             style={{
               flexDirection: 'row',
@@ -73,31 +115,29 @@ export function Cart({navigation}) {
               marginVertical: 10,
             }}>
             <Text style={styles.txtPrice}>{item.total} đ</Text>
-            <View style={{flexDirection: 'row', alignItems:'center'}}>
-              <TouchableOpacity 
-              style={styles.btnContainer}
-              disabled={item.quantity <= 1}
-              onPress={ async () =>{
-               await minus(index)
-               .then(() => { 
-                AsyncStorage.setItem("cart",JSON.stringify(cart))
-                console.log('new Cart',cart)
-              })
-              
-              }}
-              >
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+              <TouchableOpacity
+                style={styles.btnContainer}
+                disabled={item.quantity <= 1}
+                onPress={() => {
+                  minus(index);
+                  //  .then(() => {
+                  //   AsyncStorage.setItem("cart",JSON.stringify(cart))
+                  //   console.log('new Cart',cart)
+                  // })
+                }}>
                 <Icon name="minus" size={20} color={COLOR.SAPPHIRE} />
               </TouchableOpacity>
               <Text style={{marginHorizontal: 20}}>{item.quantity}</Text>
-              <TouchableOpacity style={styles.btnContainer} 
-                onPress = { async () =>{
-                  await plus(index)
-                  .then(() => { 
-                    AsyncStorage.setItem("cart",JSON.stringify(cart))
-                    console.log('new Cart',cart)
-                  })
-                }}
-              >
+              <TouchableOpacity
+                style={styles.btnContainer}
+                onPress={() => {
+                  plus(index);
+                  // .then(() => {
+                  //   AsyncStorage.setItem("cart",JSON.stringify(cart))
+                  //   console.log('new Cart',cart)
+                  // })
+                }}>
                 <Icon name="plus" size={20} color={COLOR.SAPPHIRE} />
               </TouchableOpacity>
             </View>
@@ -162,13 +202,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  btnContainer:{
-    backgroundColor:COLOR.BLUE_GRAY,
-    height:30,
-    width:30,
-    borderRadius:10,
-    justifyContent:'center',
-    alignItems:'center',
-
-  }
+  btnContainer: {
+    backgroundColor: COLOR.BLUE_GRAY,
+    height: 30,
+    width: 30,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 });

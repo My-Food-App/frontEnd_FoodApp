@@ -38,6 +38,20 @@ export function Home({ route, navigation }) {
     price: 10000,
     quantity:2,
     total: 20000
+  },
+  {
+    _id:'21112',
+    name: 'three',
+    price: 10000,
+    quantity:2,
+    total: 20000
+  },
+  {
+    _id:'21141',
+    name: 'four',
+    price: 10000,
+    quantity:2,
+    total: 20000
   }
 
 ]
