@@ -2,7 +2,7 @@ import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login, ChangePassword, Register, ConfirmAccount, ForgotPassword,Home,
-    Tabs,Account,DetailStore,DetailItem,MyStoreInfomation,CreateProduct, Cart } from '../screens';
+    Tabs,Account,DetailStore,DetailItem,MyStoreInfomation,CreateProduct,Order,Cart } from '../screens';
 const Stack = createNativeStackNavigator();
 
 export function Navigation() {
@@ -22,6 +22,7 @@ export function Navigation() {
                 <Stack.Screen name="MyStoreInfomation" component={MyStoreInfomation} />
                 <Stack.Screen name="CreateProduct" component={CreateProduct} />
                 <Stack.Screen name="Cart" component={Cart} />
+                <Stack.Screen name="Order" component={Order} />
             </Stack.Navigator>
         </NavigationContainer>
     )

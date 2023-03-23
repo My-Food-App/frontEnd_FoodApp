@@ -21,7 +21,38 @@ import {COLOR, SIZES} from '../../constants';
 const {width, height} = Dimensions.get('window');
 
 export function Cart({navigation}) {
+  const dataTest = [
+    {
+      _id: '11111',
+      name: 'One',
+      price: 10000,
+      quantity: 4,
+      total: 40000,
+    },
+    {
+      _id: '21111',
+      name: 'Two',
+      price: 10000,
+      quantity: 2,
+      total: 20000,
+    },
+    {
+      _id: '21112',
+      name: 'three',
+      price: 10000,
+      quantity: 2,
+      total: 20000,
+    },
+    {
+      _id: '21141',
+      name: 'four',
+      price: 10000,
+      quantity: 2,
+      total: 20000,
+    },
+  ];
   const [cart, setCart] = useState([]);
+  const [totalPrice, setTotalPrice] = useState(0);
   useEffect(() => {
     AsyncStorage.getItem('cart').then(result => {
       console.log('resurl', JSON.parse(result));
@@ -30,8 +61,10 @@ export function Cart({navigation}) {
   }, []);
   useEffect(() => {
     AsyncStorage.setItem('cart', JSON.stringify(cart));
+
     console.log('newcart', cart);
   }, [cart]);
+
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -57,6 +90,12 @@ export function Cart({navigation}) {
       </View>
     );
   }
+  function countTotal(accumulator, current) {
+    return accumulator + current.total;
+  }
+  // console.log(cart.reduce(countTotal, 0));
+  let total = cart.reduce(countTotal, 0);
+  // setTotalPrice(total);
   function renderProduct(data) {
     const renderItem = ({item, index}) => {
       const plus = async index => {
@@ -79,6 +118,7 @@ export function Cart({navigation}) {
         console.log('delete item', cart);
         setCart(newCart);
       };
+
       return (
         <TouchableOpacity
           style={styles.itemContainer}
@@ -156,10 +196,32 @@ export function Cart({navigation}) {
       </View>
     );
   }
+  const renderFooter = () => {
+    return (
+      <View style={styles.footerContainer}>
+        <View style={styles.totalPriceContainer}>
+          <Text style={[styles.txtStyle, {fontSize: 18}]}>Tổng cộng</Text>
+          <Text style={[styles.txtStyle, {fontSize: 18, fontWeight: '600'}]}>
+            {total}₫
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={styles.btnOrderContainer}
+          onPress={() => {
+            navigation.navigate('Order');
+          }}>
+          <Text style={[{fontSize: 18, fontWeight: '700'}, styles.txtStyle]}>
+            Trang thanh toán
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
   return (
     <View style={styles.container}>
       {renderHeader()}
       {cart && renderProduct(cart)}
+      {renderFooter()}
     </View>
   );
 }
@@ -188,7 +250,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemContainer: {
-    borderBottomColor: COLOR.lightGray3,
+    borderBottomColor: COLOR.BLUE_GRAY,
     borderBottomWidth: 1,
     paddingHorizontal: SIZES.padding,
   },
@@ -209,5 +271,29 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  footerContainer: {
+    height: 150,
+    backgroundColor: COLOR.WHITE,
+    paddingHorizontal: 20,
+    borderTopWidth: 0.5,
+    borderColor: COLOR.BLUE_GRAY,
+  },
+  totalPriceContainer: {
+    flexDirection: 'row',
+    height: 80,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  btnOrderContainer: {
+    height: 50,
+    backgroundColor: COLOR.MAIN,
+    marginBottom: 20,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  txtStyle: {
+    color: COLOR.BLACK,
   },
 });

@@ -14,3 +14,4 @@ export { DetailItem } from "./detail.iteam";
 export { MyStoreInfomation } from "./mystorte.settingInfor"
 export { CreateProduct } from "./create.product"
 export {Cart} from "./cart"
+export { Order } from "./order"
