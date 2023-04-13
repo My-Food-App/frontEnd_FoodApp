@@ -14,15 +14,13 @@ export function Register({ navigation }) {
     const [phoneNumber, setPhoneNumber] = useState('');
     const [created_date, setCreated_date] = useState('1/1/2022');
     const handleRegister = async () => {
-        await register({username,password,email,created_date,fullName,phoneNumber})
+        await register({username,password,email,created_date,fullName,phoneNumber,navigation})
         console.log(username);
         console.log(email);
         console.log(password);
         console.log(phoneNumber);
         console.log(fullName);
-        navigation.navigate("ConfirmAccount",{
-            email
-        });
+       
     }
     const handleLogin = async () => {
        

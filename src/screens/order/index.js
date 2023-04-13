@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useEffect,useState} from 'react';
 import {
   Text,
   View,
@@ -14,9 +14,32 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import {COLOR, SIZES} from '../../constants';
+import { createOrder } from '../../api';
 const {width, height} = Dimensions.get('window');
 
 export function Order({navigation}) {
+  const [cart, setCart] = useState([]);
+  const [fee, setFee] = useState(20000);
+  const [user, setUser] = useState(null);
+  const [store, setStore] = useState(null);
+  useEffect(() => {
+    AsyncStorage.getItem('cart').then(result => {
+      console.log('resurl===', JSON.parse(result));
+      setCart(JSON.parse(result));
+    });
+    AsyncStorage.getItem('user').then(result => {
+      console.log('user===', JSON.parse(result));
+      setUser(JSON.parse(result));
+    });
+    AsyncStorage.getItem('storeOrder').then(result => {
+      console.log('storeOrder===', JSON.parse(result));
+      setStore(JSON.parse(result));
+    });
+  }, []);
+  function countTotal(accumulator, current) {
+    return accumulator + current.total;
+  }
+  let total = cart.reduce(countTotal, 0);
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -31,6 +54,27 @@ export function Order({navigation}) {
         </TouchableOpacity>
       </View>
     );
+  }
+  const renderCartItem = (cart) => {
+    const renderItem = ({item}) => {
+      return ( <TouchableOpacity style={styles.inforItemContainer}>
+        <View style={{flexDirection:'row',alignItems:'center'}}>
+        <Text style={{color:COLOR.MAIN, fontSize:16, fontWeight:'500'}}>{item.quantity}x</Text>
+
+            <Text style={[styles.txtStyle,{fontSize:20,fontWeight:'600', marginLeft:20}]}>{item.name}</Text>
+
+        </View>
+        <Text style={[styles.txtStyle,{fontSize:16}]}>{item.total}</Text>
+      </TouchableOpacity>)
+    }
+      return (<View>
+        <FlatList 
+          data={cart}
+          renderItem={renderItem}
+          keyExtractor={item => `${item._id}`}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>)
   }
 
   function renderInforOrder() {
@@ -60,25 +104,15 @@ export function Order({navigation}) {
         </View>
         <View style={styles.itemsOrderContainer}>
             <Text style={[styles.txtStyle,{fontSize:20,marginHorizontal:20,fontWeight:'600'}]}>Tóm tắt đơn đặt hàng</Text>
-            <View>
-            <TouchableOpacity style={styles.inforItemContainer}>
-            <View style={{flexDirection:'row',alignItems:'center'}}>
-            <Text style={{color:COLOR.MAIN, fontSize:16, fontWeight:'500'}}>2x</Text>
-
-                <Text style={[styles.txtStyle,{fontSize:20,fontWeight:'600', marginLeft:20}]}>Cơm chiên trứng</Text>
-
-            </View>
-            <Text style={[styles.txtStyle,{fontSize:16}]}>200.000₫</Text>
-          </TouchableOpacity>
-            </View>
+           <ScrollView horizontal>{renderCartItem(cart)}</ScrollView>
             <View>
                 <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between', paddingHorizontal:20,marginTop:10}}>
                     <Text style={[styles.txtStyle,{fontSize:16}]}>Tổng tạm tính</Text>
-                    <Text style={[styles.txtStyle,{fontSize:16}]}>200.000₫</Text>
+                    <Text style={[styles.txtStyle,{fontSize:16}]}>{total}</Text>
                 </View>
                 <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between', paddingHorizontal:20,marginTop:10}}>
                     <Text style={[styles.txtStyle,{fontSize:16}]}>Phí áp dụng</Text>
-                    <Text style={[styles.txtStyle,{fontSize:16}]}>20.000₫</Text>
+                    <Text style={[styles.txtStyle,{fontSize:16}]}>{fee}</Text>
                 </View>
             </View>
         </View>
@@ -106,6 +140,18 @@ export function Order({navigation}) {
       </ScrollView>
     );
   }
+  const handleOrder = async () => {
+    
+   // let [userId,storeId,name,products,shippingfee,totalPrice]  = [user._id,store._id,user.name,cart,fee,total+fee]
+   const userId = user._id
+   const storeId =store._id
+   const name = store.name
+   const products = cart
+   const shippingfee = fee
+   const totalPrice = total+fee
+    await createOrder({userId,storeId,name,products,shippingfee,totalPrice,navigation})
+    AsyncStorage.setItem('cart', '[]');
+  }
 
   const renderFooter = () => {
     return (
@@ -113,14 +159,12 @@ export function Order({navigation}) {
         <View style={styles.totalPriceContainer}>
           <Text style={[styles.txtStyle, {fontSize: 18}]}>Tổng cộng</Text>
           <Text style={[styles.txtStyle, {fontSize: 18, fontWeight: '600'}]}>
-            330.333 đ
+           {total+fee}
           </Text>
         </View>
         <TouchableOpacity
           style={styles.btnOrderContainer}
-          onPress={() => {
-            navigation.navigate('Order');
-          }}>
+          onPress={handleOrder}>
           <Text style={[{fontSize: 18, fontWeight: '700'}, styles.txtStyle]}>
             Đặt đơn
           </Text>
@@ -164,7 +208,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomWidth:1,
     borderBottomColor: COLOR.lightGray2,
-    backgroundColor:COLOR.WHITE
+    backgroundColor:COLOR.WHITE,
+    width : width-40
+
   },
   txtStyle:{
     color: COLOR.BLACK

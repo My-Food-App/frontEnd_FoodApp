@@ -4,7 +4,7 @@ import React, {
   useRef,
   useEffect,
   useCallback,
-} from "react";
+} from 'react';
 import {
   Text,
   View,
@@ -14,71 +14,81 @@ import {
   ScrollView,
   StyleSheet,
   FlatList,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage"
-import { data } from "../../data/data";
-import { COLOR, SIZES, FONTS ,icons} from "../../constants";
-import { User, Key } from "../../icons";
-const { width, height } = Dimensions.get("window");
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/AntDesign';
+import {data} from '../../data/data';
+import {COLOR, SIZES, FONTS, icons} from '../../constants';
+import {User, Key} from '../../icons';
+const {width, height} = Dimensions.get('window');
+import {getStores} from '../../api';
 
-export function Home({ route, navigation }) {
-  
-  console.log(data);
+export function Home({route, navigation}) {
+  const [product, setProduct] = useState([]);
+  const [stores, setStores] = useState([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      const pr = await getStores();
+      setStores(pr);
+    };
+    fetchData();
+  }, []);
+  //console.log("PRODUCT====",product);
+  // console.log(data);
   const dataTest = [
     {
-    _id:'11111',
-    name: 'One',
-    price: 10000,
-    quantity:4,
-    total: 40000
-  },
-  {
-    _id:'21111',
-    name: 'Two',
-    price: 10000,
-    quantity:2,
-    total: 20000
-  },
-  {
-    _id:'21112',
-    name: 'three',
-    price: 10000,
-    quantity:2,
-    total: 20000
-  },
-  {
-    _id:'21141',
-    name: 'four',
-    price: 10000,
-    quantity:2,
-    total: 20000
-  }
-
-]
+      _id: '11111',
+      name: 'One',
+      price: 10000,
+      quantity: 4,
+      total: 40000,
+    },
+    {
+      _id: '21111',
+      name: 'Two',
+      price: 10000,
+      quantity: 2,
+      total: 20000,
+    },
+    {
+      _id: '21112',
+      name: 'three',
+      price: 10000,
+      quantity: 2,
+      total: 20000,
+    },
+    {
+      _id: '21141',
+      name: 'four',
+      price: 10000,
+      quantity: 2,
+      total: 20000,
+    },
+  ];
   //  AsyncStorage.setItem("cart",JSON.stringify(dataTest))
+  // AsyncStorage.setItem("cart","[]")
 
-//Rendering
+  //Rendering
   function renderMyFoodsection(foods) {
-    const renderItem = ({ item, index }) => {
+    const renderItem = ({item, index}) => {
       return (
         <TouchableOpacity
           style={{
             flex: 1,
             marginLeft: index == 0 ? SIZES.padding : 0,
             marginRight: SIZES.radius,
-            flexDirection: "column",
+            flexDirection: 'column',
             backgroundColor: COLOR.WHITE,
             borderRadius: 20,
             width: 160,
             height: 270,
-            alignItems: "center",
+            alignItems: 'center',
           }}
           onPress={() =>
-            navigation.navigate("DetailStore", {
+            navigation.navigate('DetailStore', {
               data: item,
             })
-          }
-        >
+          }>
           {/* Book Cover */}
           <Image
             source={{
@@ -99,13 +109,12 @@ export function Home({ route, navigation }) {
 
           <View
             style={{
-              flexDirection: "column",
-              alignItems: "flex-start",
+              flexDirection: 'column',
+              alignItems: 'flex-start',
               width: 150,
               height: 100,
-            }}
-          >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
+            }}>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
               <Image
                 source={icons.tag_icon}
                 resizeMode="contain"
@@ -115,30 +124,39 @@ export function Home({ route, navigation }) {
                   height: 15,
                 }}
               />
-              <Text style={FONTS.tagNameItem}>{item.tag}</Text>
+              <Text style={FONTS.tagNameItem}>Ưu đãi đến 35k</Text>
             </View>
             <Text style={FONTS.nameItem}>{item.name}</Text>
-            <Text
-              style={{
-                color: COLOR.lightGray,
-                flexWrap: "wrap-reverse",
-                fontSize: 17,
-              }}
-            >
-              Giá: {item.price} đ
-            </Text>
+            <View style = {{flexDirection:'row'}}>
+              <Text
+                style={{
+                  color: COLOR.lightGray,
+                  flexWrap: 'wrap-reverse',
+                  fontSize: 17,
+                }}>
+                1.3 km
+              </Text>
+                <Text style={{
+                  color: COLOR.lightGray,
+                  flexWrap: 'wrap-reverse',
+                  fontSize: 17,
+                  marginLeft:20,
+                  marginRight:5
+                }}>4.7</Text>
+                 <Icon name="star" size={22} color={COLOR.YELLOW} />
+            </View>
           </View>
         </TouchableOpacity>
       );
     };
     return (
-      <View style={{ flex: 1 }}>
+      <View style={{flex: 1}}>
         {/* foods */}
-        <View style={{ flex: 1, marginTop: SIZES.padding }}>
+        <View style={{flex: 1, marginTop: SIZES.padding}}>
           <FlatList
             data={foods}
             renderItem={renderItem}
-            keyExtractor={(item) => `${item._id}`}
+            keyExtractor={item => `${item._id}`}
             //              pagingEnabled
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -203,7 +221,7 @@ export function Home({ route, navigation }) {
                   height: 15,
                 }}
               />
-              <Text style={FONTS.tagNameItem}>{item.tag}</Text>
+              <Text style={FONTS.tagNameItem}>Ưu đãi đến 35k</Text>
             </View>
             <Text style={FONTS.nameItem}>{item.name}</Text>
             <Text
@@ -212,9 +230,8 @@ export function Home({ route, navigation }) {
                 flexWrap: 'wrap-reverse',
                 fontSize: 17,
               }}>
-              Giá: {item.price} đ
+              1.3 km
             </Text>
-           
           </View>
         </TouchableOpacity>
       );
@@ -330,7 +347,6 @@ export function Home({ route, navigation }) {
           backgroundColor: COLOR.WHITE,
           flexDirection: 'row',
           alignItems: 'center',
-          
         }}>
         <TouchableOpacity
           style={{
@@ -362,9 +378,10 @@ export function Home({ route, navigation }) {
             justifyContent: 'space-evenly',
             alignItems: 'center',
           }}>
-          <TouchableOpacity onPress={()=>{
-            navigation.navigate("Cart")
-          }}>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('Cart');
+            }}>
             <Image
               source={icons.cart_icon}
               resizeMode="contain"
@@ -403,7 +420,7 @@ export function Home({ route, navigation }) {
             backgroundColor: COLOR.WHITE,
           }}>
           <Text style={FONTS.titleFont}>Đề xuất cho bạn</Text>
-          {renderMyFoodsection(data)}
+          {renderMyFoodsection(stores)}
         </View>
         <View
           style={{
@@ -413,11 +430,11 @@ export function Home({ route, navigation }) {
             backgroundColor: COLOR.WHITE,
           }}>
           <Text style={FONTS.titleFont}>Ưu đãi lớn</Text>
-          {renderMyFoodsection(data)}
+          {renderMyFoodsection(stores)}
         </View>
         <View style={{flex: 3, backgroundColor: COLOR.WHITE, marginTop: 10}}>
           <ScrollView horizontal>
-            {renderMyFoodsectionIntoColumn(data)}
+            {renderMyFoodsectionIntoColumn(stores)}
           </ScrollView>
         </View>
       </ScrollView>
@@ -426,29 +443,29 @@ export function Home({ route, navigation }) {
 }
 const styles = StyleSheet.create({
   customRatingBar: {
-    justifyContent: "center",
-    flexDirection: "row",
+    justifyContent: 'center',
+    flexDirection: 'row',
   },
   starImageStyle: {
     width: 15,
     height: 15,
-    resizeMode: "cover",
+    resizeMode: 'cover',
   },
   loadingContainer: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   paragraph: {
     margin: 24,
     fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
   posterImage: {
     width: 150,
     height: 200,
-    resizeMode: "cover",
+    resizeMode: 'cover',
     borderRadius: 24,
     margin: 0,
     marginBottom: 10,

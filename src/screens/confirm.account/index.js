@@ -1,5 +1,5 @@
 import React, { useState,useEffect } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet,Alert } from "react-native";
 import { Input, Button, Title, Description } from "../../components";
 import { Authentication } from "../../layouts";
 import { User, Key } from "../../icons";
@@ -14,8 +14,8 @@ export function ConfirmAccount({ route,navigation }) {
     const handleConfirmAccount = async () => {
         console.log(code);
         console.log(email);
-        await confirmAccount({code,email})
-        navigation.navigate("Login")
+        await confirmAccount({code,email,navigation})
+       
     }
     const handleRegister = () => {
         navigation.navigate("Register")

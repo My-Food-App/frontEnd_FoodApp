@@ -21,36 +21,7 @@ import {COLOR, SIZES} from '../../constants';
 const {width, height} = Dimensions.get('window');
 
 export function Cart({navigation}) {
-  const dataTest = [
-    {
-      _id: '11111',
-      name: 'One',
-      price: 10000,
-      quantity: 4,
-      total: 40000,
-    },
-    {
-      _id: '21111',
-      name: 'Two',
-      price: 10000,
-      quantity: 2,
-      total: 20000,
-    },
-    {
-      _id: '21112',
-      name: 'three',
-      price: 10000,
-      quantity: 2,
-      total: 20000,
-    },
-    {
-      _id: '21141',
-      name: 'four',
-      price: 10000,
-      quantity: 2,
-      total: 20000,
-    },
-  ];
+  
   const [cart, setCart] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   useEffect(() => {
@@ -94,7 +65,9 @@ export function Cart({navigation}) {
     return accumulator + current.total;
   }
   // console.log(cart.reduce(countTotal, 0));
-  let total = cart.reduce(countTotal, 0);
+  if(cart){
+    var total = cart.reduce(countTotal, 0);
+  }
   // setTotalPrice(total);
   function renderProduct(data) {
     const renderItem = ({item, index}) => {
@@ -217,13 +190,15 @@ export function Cart({navigation}) {
       </View>
     );
   };
-  return (
-    <View style={styles.container}>
-      {renderHeader()}
-      {cart && renderProduct(cart)}
-      {renderFooter()}
-    </View>
-  );
+    
+      return (
+        <View style={styles.container}>
+          {renderHeader()}
+          {cart && renderProduct(cart)}
+          {cart && renderFooter()}
+        </View>
+      )
+
 }
 const styles = StyleSheet.create({
   container: {

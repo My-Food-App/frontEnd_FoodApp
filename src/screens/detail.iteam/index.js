@@ -26,11 +26,15 @@ export const DetailItem = ({route, navigation}) => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalPriceOption, setTotalPriceOption] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [storeOrder, setStoreOrder] = useState([]);
   useEffect(() => {
     let {data} = route.params;
+    let {store} = route.params;
     setData(data);
     setPrice(data.price);
+    setStoreOrder(store)
     console.log('data', data);
+    console.log('store========', store);
   }, [data]);
   useEffect(() => {
     AsyncStorage.getItem('cart').then(result => {
@@ -210,6 +214,8 @@ export const DetailItem = ({route, navigation}) => {
             onPress={async () => {
               console.log('add');
               addToCart();
+             AsyncStorage.setItem('storeOrder', JSON.stringify(storeOrder));
+              navigation.navigate('Cart')
             }}>
             <Text style={{fontSize: 18, fontWeight: '600'}}>
               Thêm vào giỏ hàng - {price*quantity + totalPriceOption}

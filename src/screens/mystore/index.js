@@ -20,6 +20,7 @@ import { ScrollView } from 'react-native-gesture-handler';
 export function MyStore({navigation}) {
   const [productInMyStore, setProductInMyStore] = useState('1');
   const [tab, setTab] = useState(1);
+  const [subTab, setSubTab] = useState(1);
   const handleCreateStore = () => {
     navigation.navigate('MyStoreInfomation');
   };
@@ -252,6 +253,92 @@ export function MyStore({navigation}) {
       </View>
     );
   }
+  const renderOrders = () =>{
+    return (
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(1);
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 1 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 1 ? 1 : 0,
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 1 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+             Chờ xác nhận
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(2);
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 2 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 2 ? 1 : 0,
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 2 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Chờ lấy
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(3);
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 3 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 3 ? 1 : 0,
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 3 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Đang giao
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(4);
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 4 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 4 ? 1 : 0,
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 4 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Đã giao
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
   if (productInMyStore) {
     return (
       <View style={styles.container}>
@@ -261,7 +348,7 @@ export function MyStore({navigation}) {
           {renderMyFoodsectionIntoColumn(dataDetail)}
         </ScrollView>)}
         {tab == 2 && (<ScrollView>
-          <Text>2</Text>
+          {renderOrders()}
         </ScrollView>)}
         {tab == 3 && (<ScrollView>
           <Text>3</Text>

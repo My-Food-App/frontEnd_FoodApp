@@ -2,15 +2,27 @@ import React, {useState, useEffect} from 'react';
 import {Text, View, ImageBackground, Dimensions, Image,ScrollView,FlatList,TouchableOpacity,StyleSheet} from 'react-native';
 import { COLOR, SIZES, FONTS ,icons} from "../../constants";
 import { data as listData,dataDetail } from '../../data/data';
+import {findProductByIdStore} from '../../api';
 const {width, height} = Dimensions.get('window');
 export const  DetailStore = ({route, navigation}) => {
   const [data, setData] = useState(null);
+  const [product, setProduct] = useState(null);
   useEffect(() => {
     let {data} = route.params;
     setData(data);
   }, [data]);
 
-
+  useEffect( () => {
+     if(data){
+       const storeId = data._id
+       const fetchData = async () => {
+         const pr = await findProductByIdStore({storeId});
+         setProduct(pr);
+       };
+       fetchData();
+     }
+   }, [data]);
+   console.log("Product ====== ", product);
   // Render data
   const renderDataItem = data => {
     console.log(data);
@@ -167,7 +179,7 @@ export const  DetailStore = ({route, navigation}) => {
                   }}
                 />
                 <Text style={{fontSize: 16, color: 'red', marginLeft: 20}}>
-                  {data.tag}
+                  Ưu đãi đến 35k
                 </Text>
               </View>
               <View style={{flex: 1}}>
@@ -208,7 +220,7 @@ export const  DetailStore = ({route, navigation}) => {
           }}
           onPress={() =>
             navigation.navigate('DetailItem', {
-              data: item,
+              data: item, store:data
             })
           }>
           {/* Book Cover */}
@@ -295,7 +307,7 @@ export const  DetailStore = ({route, navigation}) => {
           }}
           onPress={() =>
             navigation.navigate('DetailItem', {
-              data: item,
+              data: item, store:data
             })
           }>
           {/* Book Cover */}
@@ -366,7 +378,7 @@ export const  DetailStore = ({route, navigation}) => {
       </View>
     );
   }
-  if (data) {
+  if (product) {
     return (
       <ScrollView
         style={{
@@ -376,12 +388,12 @@ export const  DetailStore = ({route, navigation}) => {
         <View style={{flex: 1}}>{renderDataItem(data)}</View>
         <View style={{flex: 1,marginTop:20}}>
             <Text style={{fontSize: 22, color: 'black', fontWeight: '600',marginLeft:width*0.05}}>Dành cho bạn</Text>
-            <ScrollView horizontal>{renderMyFoodsection(dataDetail)}</ScrollView>
+            <ScrollView horizontal>{renderMyFoodsection(product)}</ScrollView>
             </View>
         
         <View style={{flex: 1,marginTop:20}}>
             <Text style={{fontSize: 22, color: 'black', fontWeight: '600',marginLeft:width*0.05}}>Đề xuất</Text>
-            <ScrollView horizontal>{renderMyFoodsectionIntoColumn(dataDetail)}</ScrollView>
+            <ScrollView horizontal>{renderMyFoodsectionIntoColumn(product)}</ScrollView>
             </View>
       </ScrollView>
     );

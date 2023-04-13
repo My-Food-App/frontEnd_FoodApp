@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet,Alert } from "react-native";
 import { Input, Button, Title, Description } from "../../components";
 import { Authentication } from "../../layouts";
 
@@ -7,13 +7,19 @@ import { COLOR } from "../../constants";
 import { User, Key } from "../../icons";
 import { login } from "../../api";
 export function Login({ navigation }) {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('minhieu');
+    const [password, setPassword] = useState('123456');
     const handleLogin = async () => {
         console.log(username);
         console.log(password);
-        await login({username, password})
-        navigation.navigate("Tabs")
+        await login({username, password,navigation})
+        // .then(() =>{
+        //     navigation.navigate("Tabs")
+        // })
+        // .catch((err) =>{
+        //     console.log(err)
+        // })
+        
     }
     const handleRegister = () => {
         navigation.navigate("Register")

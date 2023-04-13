@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { COLOR, SIZES, FONTS ,icons} from "../../constants";
 import {userInfor,data,dataActivities} from "../../data/data";
+import { Navigation } from '../../navigation';
 const {width, height} = Dimensions.get('window');
 
 
@@ -117,7 +118,11 @@ export function User({navigation}) {
             justifyContent: 'center',
             borderWidth: 1,
             borderColor: COLOR.lightGray3,
-          }}>
+          }}
+          onPress={() =>{
+            navigation.navigate("MyOrder")
+          }}
+          >
           <Image
             source={icons.bill_icon}
             resizeMode="contain"
@@ -135,7 +140,11 @@ export function User({navigation}) {
             justifyContent: 'center',
             borderWidth: 1,
             borderColor: COLOR.lightGray3,
-          }}>
+          }}
+          onPress={() =>{
+            navigation.navigate("FavoriteStore")
+          }}
+          >
           <Image
             source={icons.heart_icon}
             resizeMode="contain"
