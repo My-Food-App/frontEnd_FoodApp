@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Login, ChangePassword, Register, ConfirmAccount, ForgotPassword,Home,
+import { Login, ChangePassword, Register, ConfirmAccount, ForgotPassword,Home,OrderDetail,
     Tabs,Account,DetailStore,DetailItem,MyStoreInfomation,CreateProduct,Order,Cart,MyOrder,FavoriteStore } from '../screens';
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +25,7 @@ export function Navigation() {
                 <Stack.Screen name="Order" component={Order} />
                 <Stack.Screen name="MyOrder" component={MyOrder} />
                 <Stack.Screen name="FavoriteStore" component={FavoriteStore} />
+                <Stack.Screen name="OrderDetail" component={OrderDetail} />
             </Stack.Navigator>
         </NavigationContainer>
     )

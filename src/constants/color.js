@@ -10,6 +10,7 @@ const COLOR = {
     ACCENT: "#C29C1D",
     GREEN: "#84CA93",
     GREEN2: "#027335",
+    GREEN3: "#189D97",
     PURPLE: "#A183E0",
     YELLOW: "yellow",
     PRIMARY_LIGHT: "#C8EDD9",

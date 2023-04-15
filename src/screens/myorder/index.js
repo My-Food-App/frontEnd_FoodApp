@@ -220,7 +220,9 @@ export function MyOrder({navigation}) {
             borderBottomWidth: 1,
             borderColor: COLOR.lightGray5,
           }}
-          onPress={() => {}}>
+          onPress={() => {
+            navigation.navigate("OrderDetail",{data:item})
+          }}>
           <View
             style={{
               backgroundColor: COLOR.GREEN,

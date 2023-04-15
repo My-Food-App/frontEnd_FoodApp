@@ -65,7 +65,7 @@ export function MyStore({navigation}) {
       };
       fetchData();
     }
-  }, [store]);
+  }, [store,tab]);
 
   useEffect(() => {
     setOrderWithStatus(orders.filter(checkStatus1))
@@ -441,7 +441,9 @@ export function MyStore({navigation}) {
             borderBottomWidth: 1,
             borderColor: COLOR.lightGray5,
           }}
-          onPress={() => {}}>
+          onPress={() => {
+            navigation.navigate("OrderDetail",{data:item})
+          }}>
           <View
             style={{
               backgroundColor: COLOR.GREEN,
