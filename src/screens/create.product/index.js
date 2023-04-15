@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState,useEffect} from 'react';
 import {
   Text,
   View,
@@ -18,8 +18,27 @@ import Entypo from 'react-native-vector-icons/Entypo';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {Input} from '../../components';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {createProduct} from '../../api';
 const {width, height} = Dimensions.get('window');
-export function CreateProduct({navigation}) {
+export function CreateProduct({navigation,route}) {
+
+  const [idStore, setIdStore] = useState(null)
+  const [name, setName] = useState("")
+  const [description, setDescription] = useState("")
+  const [price, setPrice] = useState(0)
+
+  useEffect(() => {
+    let {store} = route.params;
+    setIdStore(store._id);
+  }, [idStore]);
+
+  const handleCreateProduct = () =>{
+    console.log("Create Product")
+    createProduct({name,description,idStore,price}).then(()=>{navigation.goBack()})
+  }
+
+console.log("STORE========>",idStore)
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -102,27 +121,29 @@ export function CreateProduct({navigation}) {
       <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Tên sản phẩm:</Text>
-          <Input style={{marginTop: 10}} placeholder="Tên sản phẩm..." />
+          <Input style={{marginTop: 10}} placeholder="Tên sản phẩm..." value={name} onChangeText={setName}/>
         </View>
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Loại sản phẩm:</Text>
           <DropdownComponent data={data} setStyle={styles.dropdown}/>
           
         </View>
-        <View style={styles.itemInContent}>
+        {/* <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Số Lượng:</Text>
           <Input
             style={{marginTop: 10}}
             placeholder="Số lượng..."
             keyboardType="numeric"
           />
-        </View>
+        </View> */}
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Giá:</Text>
           <Input
             style={{marginTop: 10}}
             placeholder="Giá..."
             keyboardType="numeric"
+            value={price}
+            onChangeText={setPrice}
           />
         </View>
         <View style={styles.itemInContent}>
@@ -135,8 +156,11 @@ export function CreateProduct({navigation}) {
             style={styles.areaTextInput}
             placeholder="Mô tả..."
             multiline
+            value={description}
+            onChangeText={setDescription}
           />
         </View>
+       
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Hình ảnh sản phẩm:</Text>
           <TouchableOpacity>
@@ -148,11 +172,11 @@ export function CreateProduct({navigation}) {
   }
   const renderFooter = () =>{
     return(<View style={styles.footerContainer}>
-        <TouchableOpacity style={styles.btnCancel}>
+        <TouchableOpacity style={styles.btnCancel} onPress={() => navigation.goBack()}>
             <Text style={styles.txtInBtn}>Hủy</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.btnPost}>
-            <Text style={styles.txtInBtn}>Đăng bài</Text>
+            <Text style={styles.txtInBtn} onPress={handleCreateProduct}>Đăng</Text>
         </TouchableOpacity>
     </View>)
   }
@@ -275,6 +299,12 @@ const styles = StyleSheet.create({
     fontWeight:'700',
     alignSelf:'center',
    
-  }
+  },
+  input: {
+    height: 40,
+    margin: 12,
+    borderWidth: 1,
+    padding: 10,
+  },
 
 });

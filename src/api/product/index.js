@@ -22,3 +22,35 @@ export const findProductByIdStore = async ({storeId}) => {
   value = (await axios(config)).data;
   return value;
 };
+
+export const createProduct = async ({
+  name,
+  description,
+  idStore,
+  price,
+  image,
+}) => {
+  var data = JSON.stringify({
+    name,
+    description,
+    idStore,
+    price,
+  });
+
+  var config = {
+    method: 'post',
+    url: `http://${ip}:3005/api/v1/products/createProduct`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: data,
+  };
+
+  axios(config)
+    .then(function (response) {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+};

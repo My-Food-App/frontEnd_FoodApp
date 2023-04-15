@@ -1,10 +1,19 @@
 import React, {useState, useEffect} from 'react';
-import {Text, View, ImageBackground, Dimensions, Image,ScrollView,FlatList,TouchableOpacity,StyleSheet} from 'react-native';
-import { COLOR, SIZES, FONTS ,icons} from "../../constants";
-import { data as listData,dataDetail } from '../../data/data';
+import {
+  Text,
+  View,
+  ImageBackground,
+  Dimensions,
+  Image,
+  ScrollView,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
+import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {findProductByIdStore} from '../../api';
 const {width, height} = Dimensions.get('window');
-export const  DetailStore = ({route, navigation}) => {
+export const DetailStore = ({route, navigation}) => {
   const [data, setData] = useState(null);
   const [product, setProduct] = useState(null);
   useEffect(() => {
@@ -12,17 +21,17 @@ export const  DetailStore = ({route, navigation}) => {
     setData(data);
   }, [data]);
 
-  useEffect( () => {
-     if(data){
-       const storeId = data._id
-       const fetchData = async () => {
-         const pr = await findProductByIdStore({storeId});
-         setProduct(pr);
-       };
-       fetchData();
-     }
-   }, [data]);
-   console.log("Product ====== ", product);
+  useEffect(() => {
+    if (data) {
+      const storeId = data._id;
+      const fetchData = async () => {
+        const pr = await findProductByIdStore({storeId});
+        setProduct(pr);
+      };
+      fetchData();
+    }
+  }, [data]);
+  console.log('Product ====== ', product);
   // Render data
   const renderDataItem = data => {
     console.log(data);
@@ -60,7 +69,7 @@ export const  DetailStore = ({route, navigation}) => {
 
               elevation: 5,
             }}>
-            <View style={{flex: 1, marginLeft: 20,}}>
+            <View style={{flex: 1, marginLeft: 20}}>
               <Text style={FONTS.titleItem}>{data.name}</Text>
             </View>
             <View
@@ -126,7 +135,8 @@ export const  DetailStore = ({route, navigation}) => {
                 flexDirection: 'row',
                 alignItems: 'center',
               }}>
-              <View style={{flex: 4, flexDirection: 'row',alignItems:'center'}}>
+              <View
+                style={{flex: 4, flexDirection: 'row', alignItems: 'center'}}>
                 <Image
                   source={icons.shiper_icon}
                   resizeMode="contain"
@@ -220,7 +230,8 @@ export const  DetailStore = ({route, navigation}) => {
           }}
           onPress={() =>
             navigation.navigate('DetailItem', {
-              data: item, store:data
+              data: item,
+              store: data,
             })
           }>
           {/* Book Cover */}
@@ -260,7 +271,9 @@ export const  DetailStore = ({route, navigation}) => {
               />
               <Text style={FONTS.tagNameItem}>{item.tag}</Text>
             </View> */}
-            <Text numberOfLines={2} style={FONTS.nameItem}>{item.name}</Text>
+            <Text numberOfLines={2} style={FONTS.nameItem}>
+              {item.name}
+            </Text>
             <Text
               style={{
                 color: COLOR.lightGray,
@@ -269,7 +282,6 @@ export const  DetailStore = ({route, navigation}) => {
               }}>
               Giá: {item.price} đ
             </Text>
-            
           </View>
         </TouchableOpacity>
       );
@@ -307,7 +319,8 @@ export const  DetailStore = ({route, navigation}) => {
           }}
           onPress={() =>
             navigation.navigate('DetailItem', {
-              data: item, store:data
+              data: item,
+              store: data,
             })
           }>
           {/* Book Cover */}
@@ -347,7 +360,9 @@ export const  DetailStore = ({route, navigation}) => {
               />
               <Text style={FONTS.tagNameItem}>{item.tag}</Text>
             </View> */}
-            <Text numberOfLines={2} style={FONTS.nameItem}>{item.name}</Text>
+            <Text numberOfLines={2} style={FONTS.nameItem}>
+              {item.name}
+            </Text>
             <Text
               style={{
                 color: COLOR.lightGray,
@@ -356,13 +371,12 @@ export const  DetailStore = ({route, navigation}) => {
               }}>
               Giá: {item.price} đ
             </Text>
-           
           </View>
         </TouchableOpacity>
       );
     };
     return (
-      <View style={{flex: 1,justifyContent:'space-between',width:width}}>    
+      <View style={{flex: 1, justifyContent: 'space-between', width: width}}>
         {/* foods */}
         <View style={{flex: 1, marginTop: SIZES.padding}}>
           <FlatList
@@ -386,47 +400,68 @@ export const  DetailStore = ({route, navigation}) => {
           backgroundColor: COLOR.WHITE,
         }}>
         <View style={{flex: 1}}>{renderDataItem(data)}</View>
-        <View style={{flex: 1,marginTop:20}}>
-            <Text style={{fontSize: 22, color: 'black', fontWeight: '600',marginLeft:width*0.05}}>Dành cho bạn</Text>
+        {product && (
+          <View style={{flex: 1, marginTop: 20}}>
+            <Text
+              style={{
+                fontSize: 22,
+                color: 'black',
+                fontWeight: '600',
+                marginLeft: width * 0.05,
+              }}>
+              Dành cho bạn
+            </Text>
             <ScrollView horizontal>{renderMyFoodsection(product)}</ScrollView>
-            </View>
-        
-        <View style={{flex: 1,marginTop:20}}>
-            <Text style={{fontSize: 22, color: 'black', fontWeight: '600',marginLeft:width*0.05}}>Đề xuất</Text>
-            <ScrollView horizontal>{renderMyFoodsectionIntoColumn(product)}</ScrollView>
-            </View>
+          </View>
+        )}
+
+        {product && (
+          <View style={{flex: 1, marginTop: 20}}>
+            <Text
+              style={{
+                fontSize: 22,
+                color: 'black',
+                fontWeight: '600',
+                marginLeft: width * 0.05,
+              }}>
+              Đề xuất
+            </Text>
+            <ScrollView horizontal>
+              {renderMyFoodsectionIntoColumn(product)}
+            </ScrollView>
+          </View>
+        )}
       </ScrollView>
     );
   } else return <></>;
 };
 const styles = StyleSheet.create({
-    customRatingBar: {
-      justifyContent: 'center',
-      flexDirection: 'row',
-    },
-    starImageStyle: {
-      width: 15,
-      height: 15,
-      resizeMode: 'cover',
-    },
-    loadingContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    paragraph: {
-      margin: 24,
-      fontSize: 18,
-      fontWeight: 'bold',
-      textAlign: 'center',
-    },
-    posterImage: {
-      width: 150,
-      height: 200,
-      resizeMode: 'cover',
-      borderRadius: 24,
-      margin: 0,
-      marginBottom: 10,
-    },
-  });
-
+  customRatingBar: {
+    justifyContent: 'center',
+    flexDirection: 'row',
+  },
+  starImageStyle: {
+    width: 15,
+    height: 15,
+    resizeMode: 'cover',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paragraph: {
+    margin: 24,
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  posterImage: {
+    width: 150,
+    height: 200,
+    resizeMode: 'cover',
+    borderRadius: 24,
+    margin: 0,
+    marginBottom: 10,
+  },
+});

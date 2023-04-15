@@ -54,3 +54,20 @@ export const getOrderByUserid = async ({userId}) => {
   value = (await axios(config)).data;
   return value;
 };
+export const getOrderByStoreId = async ({storeId}) => {
+  var data = JSON.stringify({
+    keyWord: storeId,
+  });
+
+  var config = {
+    method: 'post',
+    url: `http://${ip}:3005/api/v1/orders/getByStoreId`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: data,
+  };
+
+  value = (await axios(config)).data;
+  return value;
+};

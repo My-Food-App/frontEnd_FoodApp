@@ -12,8 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import {ip} from '../../ipconfig';
+
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {getOrderByUserid} from '../../api';
 const {width, height} = Dimensions.get('window');
@@ -21,27 +20,59 @@ export function MyOrder({navigation}) {
   const [orders, setOrders] = useState([]);
   const [subTab, setSubTab] = useState(1);
   const [user, setUser] = useState(null);
-  useEffect(  () => {
-     AsyncStorage.getItem('user').then(result => {
+  const [status, setStatus] = useState("Chờ xác nhận");
+  const [orderWithStatus, setOrderWithStatus] = useState(null);
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(result => {
       console.log(result);
       setUser(JSON.parse(result));
     });
-   
   }, []);
 
-    useEffect( () => {
-     // const userId = "640f471dfe4f89fcac842a0f"
-      if(user){
-        const userId = user._id
-        const fetchData = async () => {
-          const pr = await getOrderByUserid({userId});
-          setOrders(pr);
-        };
-        fetchData();
-      }
-    }, [user]);
+  useEffect(() => {
+    // const userId = "640f471dfe4f89fcac842a0f"
+    if (user) {
+      const userId = user._id;
+      const fetchData = async () => {
+        const pr = await getOrderByUserid({userId});
+        setOrders(pr);
+      };
+      fetchData();
+    }
+  }, [user]);
+
+  useEffect(() => {
+   setOrderWithStatus(orders.filter(checkStatus1))
+  function checkStatus1(item) {
+    return item.status == status;
+  }
+  },[status,orders])
+
+  // const choXacNhanStatus = orders.filter(checkStatus1);
+  // function checkStatus1(item) {
+  //   return item.status == 'Chờ xác nhận';
+  // }
+  // const choLayStatus = orders.filter(checkStatus);
+  // function checkStatus(item) {
+  //   return item.status == 'Chờ lấy';
+  // }
+  // const dangGiaoStatus = orders.filter(checkStatus);
+  // function checkStatus(item) {
+  //   return item.status == 'Đang giao';
+  // }
+  // const daGiaoStatus = orders.filter(checkStatus);
+  // function checkStatus(item) {
+  //   return item.status == 'Đã giao';
+  // }
+  // const daHuyStatus = orders.filter(checkStatus);
+  // function checkStatus(item) {
+  //   return item.status == 'Đã hủy';
+  // }
+
 
   console.log('Order=== ', orders);
+  console.log('orderWithStatus=== ', orderWithStatus);
+ // console.log('choXacNhanStatus=== ', choXacNhanStatus);
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -59,10 +90,11 @@ export function MyOrder({navigation}) {
   }
   const renderOrders = () => {
     return (
-      <View style={styles.tabsContainer}>
+      <ScrollView horizontal style={styles.tabsContainer} showsHorizontalScrollIndicator={false}>
         <TouchableOpacity
           onPress={() => {
             setSubTab(1);
+            setStatus("Chờ xác nhận")
           }}
           style={{
             width: width * 0.25,
@@ -70,6 +102,7 @@ export function MyOrder({navigation}) {
             alignItems: 'center',
             borderBottomColor: subTab == 1 ? COLOR.ORGANGE : COLOR.lightGray4,
             borderBottomWidth: subTab == 1 ? 1 : 0,
+
           }}>
           <Text
             style={{
@@ -83,6 +116,7 @@ export function MyOrder({navigation}) {
         <TouchableOpacity
           onPress={() => {
             setSubTab(2);
+            setStatus("Chờ lấy")
           }}
           style={{
             width: width * 0.25,
@@ -103,6 +137,8 @@ export function MyOrder({navigation}) {
         <TouchableOpacity
           onPress={() => {
             setSubTab(3);
+            setStatus("Đang giao")
+
           }}
           style={{
             width: width * 0.25,
@@ -123,6 +159,7 @@ export function MyOrder({navigation}) {
         <TouchableOpacity
           onPress={() => {
             setSubTab(4);
+            setStatus("Đã giao")
           }}
           style={{
             width: width * 0.25,
@@ -140,7 +177,29 @@ export function MyOrder({navigation}) {
             Đã giao
           </Text>
         </TouchableOpacity>
-      </View>
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(5);
+            setStatus("Đã hủy")
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 5 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 5 ? 1 : 0,
+
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 5 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Đã hủy
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
     );
   };
   const renderListOrder = data => {
@@ -206,8 +265,12 @@ export function MyOrder({navigation}) {
     return (
       <View style={styles.container}>
         {renderHeader()}
+        <View style={{height:50}}>
         {renderOrders()}
-        {renderListOrder(orders)}
+        </View>
+        {orderWithStatus  && renderListOrder(orderWithStatus)}
+
+
       </View>
     );
   } else {
@@ -244,9 +307,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLOR.WHITE,
   },
   tabsContainer: {
-    width: width,
-    height: 50,
     flexDirection: 'row',
     paddingHorizontal: 10,
+    flex:1
   },
 });

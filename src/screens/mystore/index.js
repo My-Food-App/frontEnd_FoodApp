@@ -10,20 +10,74 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 const {width, height} = Dimensions.get('window');
-import {myStore,dataDetail} from '../../data/data';
+import {myStore, dataDetail} from '../../data/data';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {Button} from '../../components';
-import { ScrollView } from 'react-native-gesture-handler';
-
+import {ScrollView} from 'react-native-gesture-handler';
+import {findStoreByUserId,findProductByIdStore,getOrderByStoreId} from '../../api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 export function MyStore({navigation}) {
   const [productInMyStore, setProductInMyStore] = useState('1');
   const [tab, setTab] = useState(1);
   const [subTab, setSubTab] = useState(1);
+  const [user, setUser] = useState(null);
+  const [store, setStore] = useState(null)
+  const [product, setProduct] = useState(null)
+  const [orders, setOrders] = useState([])
+  const [status, setStatus] = useState("Chờ xác nhận");
+  const [orderWithStatus, setOrderWithStatus] = useState(null);
+
+
   const handleCreateStore = () => {
     navigation.navigate('MyStoreInfomation');
   };
+
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(result => {
+      console.log(result);
+      setUser(JSON.parse(result));
+    });
+  }, []);
+
+  useEffect( () => {
+     if(user){
+       const userId = user._id
+       const fetchData = async () => {
+         const pr = await findStoreByUserId({userId});
+         setStore(pr);
+       };
+       fetchData();
+     }
+   }, [user]);
+
+
+   useEffect( () => {
+    if(store){
+      const storeId = store._id
+      const fetchData = async () => {
+        const pr = await findProductByIdStore({storeId});
+        const orders = await getOrderByStoreId({storeId});
+        setProduct(pr);
+        setOrders(orders);
+      };
+      fetchData();
+    }
+  }, [store]);
+
+  useEffect(() => {
+    setOrderWithStatus(orders.filter(checkStatus1))
+   function checkStatus1(item) {
+     return item.status == status;
+   }
+   },[status,orders])
+
+   console.log("Store ==========>",store)
+   console.log("product ==========>",product)
+   console.log("orders ==========>",orders)
+
   const renderHeader = () => {
     return (
       <ImageBackground
@@ -69,13 +123,13 @@ export function MyStore({navigation}) {
             paddingHorizontal: 16,
             justifyContent: 'space-between',
           }}>
-          <Image source={{uri: myStore.image}} style={styles.image} />
+          <Image source={{uri: store.image}} style={styles.image} />
           <View style={{width: width * 0.5}}>
             <Text style={{color: COLOR.WHITE, fontSize: 20}}>
-              {myStore.name}
+              {store.name}
             </Text>
-            {myStore.status && <Text style={{color: COLOR.WHITE}}>Mở cửa</Text>}
-            {myStore.status != true && (
+            {store.status && <Text style={{color: COLOR.WHITE}}>Mở cửa</Text>}
+            {store.status != true && (
               <Text style={{color: COLOR.WHITE}}>Đóng cửa</Text>
             )}
             <View style={{flexDirection: 'row'}}>
@@ -224,7 +278,9 @@ export function MyStore({navigation}) {
               />
               <Text style={FONTS.tagNameItem}>{item.tag}</Text>
             </View> */}
-            <Text numberOfLines={2} style={FONTS.nameItem}>{item.name}</Text>
+            <Text numberOfLines={2} style={FONTS.nameItem}>
+              {item.name}
+            </Text>
             <Text
               style={{
                 color: COLOR.lightGray,
@@ -233,15 +289,15 @@ export function MyStore({navigation}) {
               }}>
               Giá: {item.price} đ
             </Text>
-            
           </View>
         </TouchableOpacity>
       );
     };
-    return (
-      <View style={{flex: 1}}>
-        {/* foods */}
-
+    if(product){
+      return (
+        <View style={{flex: 1}}>
+          {/* foods */}
+  
           <FlatList
             data={dataDetail}
             renderItem={renderItem}
@@ -249,16 +305,18 @@ export function MyStore({navigation}) {
             //              pagingEnabled
             showsHorizontalScrollIndicator={false}
           />
-
-      </View>
-    );
+        </View>
+      );
+    }
+    else return (<></>)
   }
-  const renderOrders = () =>{
+  const renderOrderStatus = () => {
     return (
-      <View style={styles.tabsContainer}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsContainer}>
         <TouchableOpacity
           onPress={() => {
             setSubTab(1);
+            setStatus("Chờ xác nhận")
           }}
           style={{
             width: width * 0.25,
@@ -273,12 +331,13 @@ export function MyStore({navigation}) {
               fontWeight: '500',
               color: subTab == 1 ? COLOR.ORGANGE : COLOR.BLACK,
             }}>
-             Chờ xác nhận
+            Chờ xác nhận
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() => {
             setSubTab(2);
+            setStatus("Chờ lấy")
           }}
           style={{
             width: width * 0.25,
@@ -299,6 +358,7 @@ export function MyStore({navigation}) {
         <TouchableOpacity
           onPress={() => {
             setSubTab(3);
+            setStatus("Đang giao")
           }}
           style={{
             width: width * 0.25,
@@ -319,6 +379,7 @@ export function MyStore({navigation}) {
         <TouchableOpacity
           onPress={() => {
             setSubTab(4);
+            setStatus("Đã giao")
           }}
           style={{
             width: width * 0.25,
@@ -336,30 +397,124 @@ export function MyStore({navigation}) {
             Đã giao
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(5);
+            setStatus("Đã hủy")
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 5 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 5 ? 1 : 0,
+
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 5 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Đã hủy
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  };
+
+  const renderListOrder = data => {
+    const itemSize = width - 20;
+    const renderItem = ({item, index}) => {
+      return (
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            marginLeft: SIZES.padding,
+            marginRight: SIZES.radius,
+            flexDirection: 'row',
+            backgroundColor: COLOR.WHITE,
+            borderRadius: 20,
+            width: itemSize,
+            height: 80,
+            alignItems: 'center',
+            borderBottomWidth: 1,
+            borderColor: COLOR.lightGray5,
+          }}
+          onPress={() => {}}>
+          <View
+            style={{
+              backgroundColor: COLOR.GREEN,
+              height: 60,
+              width: 60,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 10,
+            }}>
+            <FontAwesome5 name="cube" size={30} color={COLOR.WHITE} />
+          </View>
+          <View
+            style={{
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              height: 80,
+              marginHorizontal: 20,
+              justifyContent: 'center',
+            }}>
+            <Text style={FONTS.nameItem}>{item.name}</Text>
+            <Text style={FONTS.nameItem}>{item.totalPrice} ₫</Text>
+          </View>
+        </TouchableOpacity>
+      );
+    };
+    return (
+      <View style={{flex: 1}}>
+        {/* foods */}
+        <View style={{flex: 1, marginTop: SIZES.padding}}>
+          <FlatList
+            data={data}
+            renderItem={renderItem}
+            keyExtractor={item => `${item._id}`}
+            //              pagingEnabled
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
       </View>
     );
-  }
-  if (productInMyStore) {
+  };
+  if (store) {
     return (
       <View style={styles.container}>
         <View>{renderHeader()}</View>
         <View>{rendertabs()}</View>
-        {tab == 1 && (<ScrollView horizontal showsHorizontalScrollIndicator={false} >
-          {renderMyFoodsectionIntoColumn(dataDetail)}
-        </ScrollView>)}
-        {tab == 2 && (<ScrollView>
-          {renderOrders()}
-        </ScrollView>)}
-        {tab == 3 && (<ScrollView>
-          <Text>3</Text>
-        </ScrollView>)}
-         <TouchableOpacity
-          onPress={() =>{
-           navigation.navigate("CreateProduct")
-          }}
-         >
-         <Ionicons name="add-circle-outline" size={50} style={styles.iconAdd} color={COLOR.BLACK} />
-         </TouchableOpacity>
+        {tab == 1 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {renderMyFoodsectionIntoColumn(product)}
+          </ScrollView>
+        )}
+        {tab == 2 && <ScrollView >
+          <View style={{height:50}}>{renderOrderStatus()}</View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {renderListOrder(orderWithStatus)}
+          </ScrollView>
+         
+          </ScrollView>}
+        {tab == 3 && (
+          <ScrollView>
+            <Text>3</Text>
+          </ScrollView>
+        )}
+        <TouchableOpacity
+          onPress={() => {
+            navigation.navigate('CreateProduct',{store: store});
+          }}>
+          <Ionicons
+            name="add-circle-outline"
+            size={50}
+            style={styles.iconAdd}
+            color={COLOR.BLACK}
+          />
+        </TouchableOpacity>
       </View>
     );
   } else {
@@ -379,10 +534,10 @@ export function MyStore({navigation}) {
   }
 }
 const styles = StyleSheet.create({
-  container:{
-    flex:1,
-    backgroundColor:COLOR.WHITE,
-    position:'relative'
+  container: {
+    flex: 1,
+    backgroundColor: COLOR.WHITE,
+    position: 'relative',
   },
   containerAddStore: {
     marginVertical: 50,
@@ -412,10 +567,11 @@ const styles = StyleSheet.create({
     width: width,
     height: 50,
     flexDirection: 'row',
+    paddingHorizontal:10
   },
-  iconAdd:{
-    position:'absolute',
-    bottom:10,
-    right:10
-  }
+  iconAdd: {
+    position: 'absolute',
+    bottom: 10,
+    right: 10,
+  },
 });

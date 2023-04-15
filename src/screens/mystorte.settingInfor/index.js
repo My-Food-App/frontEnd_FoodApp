@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useId, useRef, useState} from 'react';
 import {
   Text,
   View,
@@ -7,18 +7,37 @@ import {
   StyleSheet,
   Dimensions,
   TouchableOpacity,
+  ScrollView, TextInput
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const width = Dimensions.get('screen').width;
 import {data} from '../data/data';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {Button} from '../../components';
-import {ScrollView, TextInput} from 'react-native-gesture-handler';
+import {createStore} from '../../api';
 
 export function MyStoreInfomation({navigation}) {
+  const [userId,setUserId] = useState("")
+  const [description,setDescription] = useState("")
+  const [name,setName] = useState("")
+  const [email,setEmail] = useState("hieu2233ckh@gmail.com")
+  const [phone,setPhone] = useState("0913132131")
+  const [tag,setTag] = useState("")
+
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(result => {
+      console.log("User ====>",result);
+      setUserId(JSON.parse(result)._id);
+    });
+  }, []);
+
   const handleCreateStore = () => {
-    navigation.navigate('');
+    console.log("ADD")
+    createStore({name,description,userId,email,phone})
+    navigation.navigate("Tabs")
   };
+  
   function renderHeader() {
     return (
       <View
@@ -36,6 +55,9 @@ export function MyStoreInfomation({navigation}) {
             }}
           />
         </TouchableOpacity>
+        <Text style={{fontSize: 20, color: COLOR.BLACK, fontWeight: '600'}}>
+          Tạo của hàng
+        </Text>
 
         <TouchableOpacity
           style={{marginRigth: SIZES.base}}
@@ -60,11 +82,11 @@ export function MyStoreInfomation({navigation}) {
       <View style={styles.containerContent}>
         <TouchableOpacity style={styles.inforContent}>
           <Text style={styles.textImfor}>Tên Shop:</Text>
-          <TextInput placeholder="Tên Shop" style={styles.textInput}/>
+          <TextInput placeholder="Tên Shop" value={name} onChangeText={setName} style={styles.textInput}/>
         </TouchableOpacity>
         <TouchableOpacity style={styles.inforContent}>
           <Text style={styles.textImfor}>Mô tả</Text>
-          <TextInput placeholder="Mô tả"  style={styles.textInput}/>
+          <TextInput placeholder="Mô tả" value={description} onChangeText={setDescription}  style={styles.textInput}/>
         </TouchableOpacity>
         <TouchableOpacity style={styles.inforContent}>
           <Text style={styles.textImfor}>Địa chỉ lấy hàng:</Text>
@@ -72,18 +94,18 @@ export function MyStoreInfomation({navigation}) {
         </TouchableOpacity>
         <TouchableOpacity style={styles.inforContent}>
           <Text style={styles.textImfor}>Email:</Text>
-          <Text style={styles.textImfor}>Hieu2233ckh@gmail.com</Text>
+          <TextInput style={styles.textImfor} value={email} onChangeText={setEmail}></TextInput>
         </TouchableOpacity>
         <TouchableOpacity style={styles.inforContent}>
           <Text style={styles.textImfor}>Số điện thoại:</Text>
-          <Text style={styles.textImfor}>0829492559</Text>
+          <TextInput style={styles.textImfor} value={phone} onChangeText={setPhone}></TextInput>
         </TouchableOpacity>
         <TouchableOpacity style={styles.inforContent}>
         <Text style={styles.textImfor}>Chọn ảnh:</Text>
           <Icon name="image" size={70} style={{ alignSelf:'center'}}/>
         </TouchableOpacity>
         <View>
-        <TouchableOpacity onPress={console.log('click')} style={styles.btnSave}> 
+        <TouchableOpacity onPress={handleCreateStore} style={styles.btnSave}> 
           <Text style={styles.txtSave}>Lưu</Text>
           </TouchableOpacity>
         </View>
