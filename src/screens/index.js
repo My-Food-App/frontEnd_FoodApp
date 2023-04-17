@@ -18,3 +18,6 @@ export {Order} from './order';
 export {MyOrder} from './myorder';
 export {FavoriteStore} from './favorite.store';
 export {OrderDetail} from './order.detail';
+export {HomeShipper} from './home.shipper';
+export {OrderShiper} from './order.shipper';
+export {ShiperTabs} from './tabs.shipper';

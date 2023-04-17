@@ -14,16 +14,24 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
-import {getUserbyId} from '../../api';
+import {getUserbyId, updateOrderById, getStoreById} from '../../api';
 import moment from 'moment';
 const {width, height} = Dimensions.get('window');
 
 export function OrderDetail({navigation, route}) {
   const [data, setData] = useState(null);
   const [user, setUser] = useState(null);
+  const [userCurrent, setUserCurrent] = useState(null);
+  const [orderId, setOrderId] = useState(null);
+  const [store, setStore] = useState(null);
+  const [storeId, setStoreId] = useState(null);
+  const [shipperId, setShipperId] = useState(null);
+  const [status, setStatus] = useState('Chờ lấy');
   useEffect(() => {
     let {data} = route.params;
     setData(data);
+    setOrderId(data._id);
+    setStoreId(data.storeId);
   }, [data]);
 
   useEffect(() => {
@@ -37,7 +45,38 @@ export function OrderDetail({navigation, route}) {
     }
   }, [data]);
 
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(result => {
+      setUserCurrent(JSON.parse(result));
+      setShipperId(JSON.parse(result)._id);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (storeId) {
+      const fetchData = async () => {
+        const pr = await getStoreById({storeId});
+        setStore(pr);
+      };
+      fetchData();
+    }
+  }, [data]);
+  console.log('STORE =>>>>', store);
+  const handleReceiveOrder = () => {
+    console.log('click');
+    if ((orderId, shipperId)) {
+      updateOrderById({orderId, status, shipperId});
+      navigation.navigate('ShiperTabs');
+    }
+  };
+
   console.log('User =>=====>', user);
+  //console.log('userCurrent =>=====>', userCurrent);
+
+  const handleUpdateStatus = () => {
+    console.log('update');
+  };
+
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -103,7 +142,20 @@ export function OrderDetail({navigation, route}) {
               {data.status}
             </Text>
           </View>
-          <Icon name="box-open" size={30} color={COLOR.WHITE} />
+          {data.shipperId !== userCurrent._id && (
+            <View>
+              <Icon name="box-open" size={30} color={COLOR.WHITE} />
+            </View>
+          )}
+          {data.shipperId == userCurrent._id && (
+            <TouchableOpacity style={{alignItems: 'center'}} onPress={handleUpdateStatus}>
+              <Icon name="edit" size={30} color={COLOR.WHITE} />
+              <Text
+                style={[styles.txtStatusOrder, {fontSize: 16, marginTop: 5}]}>
+                Cập nhật
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
         <View style={styles.clientInforContainer}>
           <Icon name="map-marker-alt" size={20} color={COLOR.BLACK} />
@@ -116,6 +168,23 @@ export function OrderDetail({navigation, route}) {
                 marginBottom: 5,
               }}>
               Địa chỉ nhận hàng
+            </Text>
+            <Text style={styles.txtInforUser}>{store.name}</Text>
+            <Text style={styles.txtInforUser}>{store.phone}</Text>
+            <Text style={styles.txtInforUser}>{store.address.value}</Text>
+          </View>
+        </View>
+        <View style={styles.clientInforContainer}>
+          <Icon name="map-marker-alt" size={20} color={COLOR.BLACK} />
+          <View style={{marginLeft: 15}}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '500',
+                color: COLOR.BLACK,
+                marginBottom: 5,
+              }}>
+              Địa chỉ giao hàng
             </Text>
             <Text style={styles.txtInforUser}>{user.fullname}</Text>
             <Text style={styles.txtInforUser}>{user.phone}</Text>
@@ -187,8 +256,8 @@ export function OrderDetail({navigation, route}) {
               flexDirection: 'row',
               justifyContent: 'space-between',
               paddingVertical: 10,
-              borderBottomColor:COLOR.lightGray2,
-              borderBottomWidth:1
+              borderBottomColor: COLOR.lightGray2,
+              borderBottomWidth: 1,
             }}>
             <Text style={[styles.txtStyle, {fontSize: 16, fontWeight: '600'}]}>
               Thành tiền
@@ -227,7 +296,6 @@ export function OrderDetail({navigation, route}) {
                 <Text
                   style={{fontSize: 16, fontWeight: '400', color: COLOR.BLACK}}>
                   {moment(data.created_date).format('YYYY-MM-DD hh:mm')}
-
                 </Text>
               </View>
             </View>
@@ -237,12 +305,38 @@ export function OrderDetail({navigation, route}) {
     );
   }
 
-  if (data && user) {
+  if (data && user && store) {
     return (
-      <ScrollView style={styles.container}>
+      <View style={styles.container}>
         {renderHeader()}
-        {renderContentOrder(data)}
-      </ScrollView>
+        <ScrollView>{renderContentOrder(data)}</ScrollView>
+        {userCurrent.role == 'shiper' && !data.shipperId && (
+          <View
+            style={{
+              height: 80,
+              justifyContent: 'center',
+              alignItems: 'center',
+              borderTopWidth: 1,
+              borderColor: COLOR.lightGray2,
+            }}>
+            <TouchableOpacity
+              onPress={handleReceiveOrder}
+              style={{
+                backgroundColor: COLOR.MAIN,
+                height: 50,
+                width: 130,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: 10,
+              }}>
+              <Text
+                style={{color: COLOR.BLACK, fontSize: 20, fontWeight: '600'}}>
+                Nhận đơn
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
     );
   } else {
     return <></>;

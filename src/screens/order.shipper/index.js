@@ -14,24 +14,33 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
-import {getOrders} from '../../api';
+import {getOrderByShipperId} from '../../api';
+
 const {width, height} = Dimensions.get('window');
 
-export function HomeShipper({navigation}) {
-  const [orders, setOrders] = useState([]);
+export function OrderShiper({navigation}) {
+ // const [userCurrent, setUserCurrent] = useState(null);
+  const [shipperId, setShipperId] = useState(null);
+  const [orders, setOrders] = useState(null);
   const [load, setLoad] = useState(true);
-  const choXacNhanStatus = orders.filter(checkStatus1);
-  function checkStatus1(item) {
-    return item.status == 'Chờ xác nhận';
-  }
 
   useEffect(() => {
-    const fetchData = async () => {
-      const pr = await getOrders();
-      setOrders(pr);
-    };
-    fetchData();
-  }, [load]);
+    AsyncStorage.getItem('user').then(result => {
+ //     setUserCurrent(JSON.parse(result));
+      setShipperId(JSON.parse(result)._id)
+    });
+  }, []);
+  useEffect(() => {
+    if (shipperId) {
+      const fetchData = async () => {
+        const pr = await getOrderByShipperId({shipperId});
+        setOrders(pr);
+      };
+      fetchData();
+    }
+  }, [shipperId,load]);
+  console.log("shipperId ====>",shipperId)
+  console.log("orders ====>",orders)
 
   const renderListOrder = data => {
     const itemSize = width - 20;
@@ -95,23 +104,24 @@ export function HomeShipper({navigation}) {
     );
   };
 
-  console.log("Order:",orders)
+
   return (
     <View
       style={styles.container}>
       <View style={styles.headerContainer}>
-      <Text style={{fontSize:22,fontWeight:'800',color:COLOR.BLACK}}>Danh sách các đơn đặt hàng</Text>
+      <Text style={{fontSize:22,fontWeight:'800',color:COLOR.BLACK}}>Đơn Hàng đã nhận</Text>
       <TouchableOpacity
         onPress={()=> setLoad(!load)}
       ><Icon name="redo-alt" size={25} color={COLOR.BLACK} /></TouchableOpacity>
       </View>
       <View style={{height:10,backgroundColor:COLOR.lightGray2}}></View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {orders && renderListOrder(choXacNhanStatus)}
+        {orders && renderListOrder(orders)}
       </ScrollView>
     </View>
   )
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

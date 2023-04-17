@@ -62,3 +62,10 @@ export const createStore = async ({
       console.log(error);
     });
 };
+
+export const getStoreById = async ({storeId}) =>{
+
+  data = await (await axios.get(`http://${ip}:3005/api/v1/stores/${storeId}`)).data;
+  return data;
+
+}

@@ -17,10 +17,22 @@ export const login = async ({username, password,navigation}) => {
     data: data,
   };
   axios(config)
-    .then(function (response) {
+    .then( async (response) => {
       console.log('user',JSON.stringify(response.data.data));
-      AsyncStorage.setItem('user', JSON.stringify(response.data.data));
-      navigation.navigate("Tabs")
+      await AsyncStorage.setItem('user', JSON.stringify(response.data.data))
+      .then(()=> {
+        if(response.data.data.role=="user"){
+          navigation.navigate("Tabs")
+        }
+        else if(response.data.data.role=="shiper"){
+          navigation.navigate("ShiperTabs")
+        }
+        else if(response.data.data.role=="admin"){
+    
+        }
+      })
+   
+      
     })
     .catch(function (error) {
       console.log(error);
