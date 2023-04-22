@@ -74,6 +74,10 @@ export function MyStore({navigation}) {
    }
    },[status,orders])
 
+   function currencyFormat(num) {
+    return  num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+ }
+
    console.log("Store ==========>",store)
    console.log("product ==========>",product)
    console.log("orders ==========>",orders)
@@ -83,7 +87,7 @@ export function MyStore({navigation}) {
       <ImageBackground
         style={styles.headerContainer}
         source={{
-          uri: 'https://assets-global.website-files.com/5e39e095596498a8b9624af1/5f6e93d250a6d04f4eae9f02_Backgrounds-WFU-thumbnail-(size).jpg',
+          uri: 'https://www.shutterstock.com/image-vector/star-universe-background-stardust-deep-260nw-1907210152.jpg',
         }}>
         <View style={styles.header}>
           <TouchableOpacity
@@ -252,7 +256,7 @@ export function MyStore({navigation}) {
               height: 130,
               borderRadius: 20,
               borderWidth: 5,
-              borderColor: COLOR.GREEN,
+              borderColor: COLOR.MAIN,
               marginVertical: 10,
             }}
           />
@@ -281,14 +285,61 @@ export function MyStore({navigation}) {
             <Text numberOfLines={2} style={FONTS.nameItem}>
               {item.name}
             </Text>
-            <Text
-              style={{
-                color: COLOR.lightGray,
-                flexWrap: 'wrap-reverse',
-                fontSize: 17,
-              }}>
-              Giá: {item.price} đ
-            </Text>
+            {item.discount == 0 && (
+              <View style={{flexDirection: 'row'}}>
+                <Text
+                  style={{
+                    color: COLOR.lightGray,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  Giá:{' '}
+                </Text>
+                <Text
+                  style={{
+                    color: COLOR.RED,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  {currencyFormat(item.price)} ₫
+                </Text>
+              </View>
+            )}
+            {item.discount !== 0 && (
+              <View style={{flexDirection: 'row'}}>
+                <Text
+                  style={{
+                    color: COLOR.lightGray,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  Giá:{' '}
+                </Text>
+                <View>
+                  <Text
+                    style={{
+                      color: COLOR.lightGray,
+                      flexWrap: 'wrap-reverse',
+                      fontSize: 17,
+                      textDecorationLine: 'line-through',
+                      textDecorationStyle: 'solid',
+                    }}>
+                    {currencyFormat(item.price)} ₫
+                  </Text>
+                  <Text
+                    style={{
+                      color: COLOR.RED,
+                      flexWrap: 'wrap-reverse',
+                      fontSize: 17,
+                    }}>
+                    {currencyFormat(
+                      item.price - (item.price / 100) * item.discount,
+                    )}{' '}
+                    ₫
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
       );
@@ -464,7 +515,7 @@ export function MyStore({navigation}) {
               justifyContent: 'center',
             }}>
             <Text style={FONTS.nameItem}>{item.name}</Text>
-            <Text style={FONTS.nameItem}>{item.totalPrice} ₫</Text>
+            <Text style={FONTS.nameItem}>{currencyFormat(item.totalPrice)} ₫</Text>
           </View>
         </TouchableOpacity>
       );
@@ -506,7 +557,7 @@ export function MyStore({navigation}) {
             <Text>3</Text>
           </ScrollView>
         )}
-        <TouchableOpacity
+        {tab == 1 && <TouchableOpacity
           onPress={() => {
             navigation.navigate('CreateProduct',{store: store});
           }}>
@@ -516,7 +567,7 @@ export function MyStore({navigation}) {
             style={styles.iconAdd}
             color={COLOR.BLACK}
           />
-        </TouchableOpacity>
+        </TouchableOpacity>}
       </View>
     );
   } else {
@@ -550,6 +601,7 @@ const styles = StyleSheet.create({
     width: width,
     alignItems: 'center',
     paddingHorizontal: 10,
+    opacity:0.9
   },
   image: {
     height: 60,

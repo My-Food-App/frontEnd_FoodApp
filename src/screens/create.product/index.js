@@ -1,4 +1,4 @@
-import React, {useState,useEffect} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Text,
   View,
@@ -16,29 +16,83 @@ import {Dropdown} from 'react-native-element-dropdown';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {Input} from '../../components';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createProduct} from '../../api';
 const {width, height} = Dimensions.get('window');
-export function CreateProduct({navigation,route}) {
-
-  const [idStore, setIdStore] = useState(null)
-  const [name, setName] = useState("")
-  const [description, setDescription] = useState("")
-  const [price, setPrice] = useState(0)
-
+export function CreateProduct({navigation, route}) {
+  const [idStore, setIdStore] = useState(null);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState(0);
+  const [imageUri, setImageUri] = useState('');
+  const [discount, setDiscount] = useState(0);
   useEffect(() => {
     let {store} = route.params;
     setIdStore(store._id);
   }, [idStore]);
+console.log("DISCOUNT======",discount)
+  const handleCreateProduct = () => {
+    console.log('Create Product');
+    if(imageUri){
+      const image = imageUri
+      createProduct({name, description, idStore, price,image,discount}).then(() => {
+        navigation.goBack();
+        setImageUri("")
+      });
+    }else{
+      createProduct({name, description, idStore, price,discount}).then(() => {
+        navigation.goBack();
+      });
 
-  const handleCreateProduct = () =>{
-    console.log("Create Product")
-    createProduct({name,description,idStore,price}).then(()=>{navigation.goBack()})
+    }
+  };
+
+  const openCamera = () => {
+    const options = {
+      storageOptions:{
+        path: 'images',
+        mediaType: 'photo'
+      },
+      includeBase64: true
+    }
+    launchCamera(options, response =>{
+    //  console.log("response=", response);
+      if(response.didCancel) {
+        console.log("user cancel")
+      }else if(response.errorMessage){
+        console.log("error message:", response.errorMessage)
+      }else {
+        const source = 'data:image/jpeg;base64,'+response.assets[0].base64
+        setImageUri(source)
+      }
+    })
   }
 
-console.log("STORE========>",idStore)
+  const openCallery = () => {
+    const options = {
+      storageOptions:{
+        path: 'images',
+        mediaType: 'photo'
+      },
+      includeBase64: true
+    }
+    launchImageLibrary(options, response =>{
+    //  console.log("response=", response);
+      if(response.didCancel) {
+        console.log("user cancel")
+      }else if(response.errorMessage){
+        console.log("error message:", response.errorMessage)
+      }else {
+        const source = 'data:image/jpeg;base64,'+response.assets[0].base64
+        setImageUri(source)
+      }
+    })
+  }
+
+  console.log('STORE========>', idStore);
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -63,17 +117,30 @@ console.log("STORE========>",idStore)
     {label: 'Item 7', value: '7'},
     {label: 'Item 8', value: '8'},
   ];
+  const dataDiscount = [
+    {label: '5 %', value: 5},
+    {label: '10 %', value: 10},
+    {label: '15 %', value: 15},
+    {label: '20 %', value: 20},
+    {label: '25 %', value: 25},
+    {label: '30 %', value: 30},
+    {label: '35 %', value: 35},
+    {label: '40 %', value: 40},
+  ];
 
-  const DropdownComponent = ({data,setStyle}) => {
+
+  const DropdownComponent = ({data, setStyle}) => {
     const [value, setValue] = useState(null);
     const [isFocus, setIsFocus] = useState(false);
 
     const renderLabel = () => {
       if (value || isFocus) {
         return (
-          <Text style={[styles.label, isFocus && { fontSize: 18,
-            fontWeight: '400',
-            color: COLOR.BLACK,}]}>
+          <Text
+            style={[
+              styles.label,
+              isFocus && {fontSize: 18, fontWeight: '400', color: COLOR.BLACK},
+            ]}>
             Chọn
           </Text>
         );
@@ -97,11 +164,11 @@ console.log("STORE========>",idStore)
           valueField="value"
           placeholder={!isFocus ? 'Chọn' : '...'}
           searchPlaceholder="Search..."
-          value={value}
+          value={discount}
           onFocus={() => setIsFocus(true)}
           onBlur={() => setIsFocus(false)}
           onChange={item => {
-            setValue(item.value);
+            setDiscount(item.value);
             setIsFocus(false);
           }}
           renderLeftIcon={() => (
@@ -118,16 +185,22 @@ console.log("STORE========>",idStore)
   };
   function renderCotent() {
     return (
-      <ScrollView style={styles.contentContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.contentContainer}
+        showsVerticalScrollIndicator={false}>
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Tên sản phẩm:</Text>
-          <Input style={{marginTop: 10}} placeholder="Tên sản phẩm..." value={name} onChangeText={setName}/>
+          <Input
+            style={{marginTop: 10}}
+            placeholder="Tên sản phẩm..."
+            value={name}
+            onChangeText={setName}
+          />
         </View>
-        <View style={styles.itemInContent}>
+        {/* <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Loại sản phẩm:</Text>
-          <DropdownComponent data={data} setStyle={styles.dropdown}/>
-          
-        </View>
+          <DropdownComponent data={data} setStyle={styles.dropdown} />
+        </View> */}
         {/* <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Số Lượng:</Text>
           <Input
@@ -148,7 +221,7 @@ console.log("STORE========>",idStore)
         </View>
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Giảm giá:</Text>
-          <DropdownComponent data={data} setStyle={styles.dropdownDisCount}/>
+          <DropdownComponent data={dataDiscount} setStyle={styles.dropdownDisCount} />
         </View>
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Mô tả:</Text>
@@ -160,39 +233,62 @@ console.log("STORE========>",idStore)
             onChangeText={setDescription}
           />
         </View>
-       
+
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Hình ảnh sản phẩm:</Text>
-          <TouchableOpacity>
-          <Icon name="image" size={100} color={COLOR.BLACK} style={{alignSelf:'center'}} />
+          <TouchableOpacity
+            onPress={openCallery}
+            style={{height:120,width:120,alignSelf:'center'}}
+          >
+            {imageUri && (
+              <Image
+                style={{height: 120, width: 120, borderRadius:10}}
+                source={{
+                  uri: imageUri,
+                }}
+              />
+            )}
+            {imageUri == '' && (
+              <Icon
+                name="image"
+                size={100}
+                color={COLOR.BLACK}
+                style={{alignSelf: 'center'}}
+              />
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
     );
   }
-  const renderFooter = () =>{
-    return(<View style={styles.footerContainer}>
-        <TouchableOpacity style={styles.btnCancel} onPress={() => navigation.goBack()}>
-            <Text style={styles.txtInBtn}>Hủy</Text>
+  const renderFooter = () => {
+    return (
+      <View style={styles.footerContainer}>
+        <TouchableOpacity
+          style={styles.btnCancel}
+          onPress={() => navigation.goBack()}>
+          <Text style={styles.txtInBtn}>Hủy</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.btnPost}>
-            <Text style={styles.txtInBtn} onPress={handleCreateProduct}>Đăng</Text>
+          <Text style={styles.txtInBtn} onPress={handleCreateProduct}>
+            Đăng
+          </Text>
         </TouchableOpacity>
-    </View>)
-  }
-  return (
-
-      <View style={styles.container}>
-        <View>{renderHeader()}</View>
-        <View style={{flex:1}}>{renderCotent()}</View>
-        {renderFooter()}
       </View>
+    );
+  };
+  return (
+    <View style={styles.container}>
+      <View>{renderHeader()}</View>
+      <View style={{flex: 1}}>{renderCotent()}</View>
+      {renderFooter()}
+    </View>
   );
 }
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:COLOR.WHITE
+    backgroundColor: COLOR.WHITE,
   },
   headerContainer: {
     flexDirection: 'row',
@@ -234,17 +330,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 10,
-    marginTop:10
+    marginTop: 10,
   },
   dropdownDisCount: {
     height: 60,
-    width:200,
+    width: 200,
     borderColor: 'gray',
     borderWidth: 0.5,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 10,
-    marginTop:10
+    marginTop: 10,
   },
   icon: {
     marginRight: 5,
@@ -272,33 +368,32 @@ const styles = StyleSheet.create({
     height: 40,
     fontSize: 16,
   },
-  footerContainer:{
-    height:80,
-    flexDirection:'row',
+  footerContainer: {
+    height: 80,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal:20
+    paddingHorizontal: 20,
   },
-  btnCancel:{
-    backgroundColor:COLOR.ORGANGE,
-    height:45,
-    width:110,
-    borderRadius:10,
-    justifyContent : 'center'
+  btnCancel: {
+    backgroundColor: COLOR.ORGANGE,
+    height: 45,
+    width: 110,
+    borderRadius: 10,
+    justifyContent: 'center',
   },
-  btnPost:{
-    backgroundColor:COLOR.GREEN2,
-    height:45,
-    width:110,
-    borderRadius:10,
-    justifyContent : 'center',
+  btnPost: {
+    backgroundColor: COLOR.GREEN2,
+    height: 45,
+    width: 110,
+    borderRadius: 10,
+    justifyContent: 'center',
   },
-  txtInBtn:{
-    color:COLOR.WHITE,
-    fontSize:18,
-    fontWeight:'700',
-    alignSelf:'center',
-   
+  txtInBtn: {
+    color: COLOR.WHITE,
+    fontSize: 18,
+    fontWeight: '700',
+    alignSelf: 'center',
   },
   input: {
     height: 40,
@@ -306,5 +401,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
   },
-
 });

@@ -119,4 +119,11 @@ export const updateOrderById = async ({orderId, status, shipperId}) => {
 
 };
 
+export const getOrderById = async ({orderId}) =>{
+
+  data = await (await axios.get(`http://${ip}:3005/api/v1/orders/${orderId}`)).data;
+  return data;
+
+}
+
 

@@ -17,15 +17,27 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/AntDesign';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {data} from '../../data/data';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {User, Key} from '../../icons';
 const {width, height} = Dimensions.get('window');
 import {getStores} from '../../api';
+import axios from 'axios';
+import Slider from '../../components/slide'; '../../components/slide/index';
 
 export function Home({route, navigation}) {
   const [product, setProduct] = useState([]);
   const [stores, setStores] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [deliveryPrice, setDeliveryPrice] = useState(0);
+  const [user, setUser] = useState(null);
+  const [reset, setReset] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const a =
+    '141 Đường Nguyễn Thái Bình, Phường Nguyễn Thái Bình, Quận 1, Thành phố Hồ Chí Minh';
+  const b = '12 Nguyễn Văn Bảo, Phường 4, Quận Gò Vấp, thành phố Hồ Chí Minh';
+
   useEffect(() => {
     const fetchData = async () => {
       const pr = await getStores();
@@ -33,8 +45,29 @@ export function Home({route, navigation}) {
     };
     fetchData();
   }, []);
+  useEffect(() => {
+    AsyncStorage.getItem('cart').then(result => {
+      console.log('resurl', JSON.parse(result));
+      setCart(JSON.parse(result));
+    });
+  }, [reset]);
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(result => {
+      console.log(result);
+      setUser(JSON.parse(result));
+    });
+  }, []);
   //console.log("PRODUCT====",product);
   // console.log(data);
+
+  // if(user){
+  //   if(user.address !== ""){
+  //       setModalVisible(true)
+  //   }else{
+  //     setModalVisible(false)
+  //   }
+  // }
+
   const dataTest = [
     {
       _id: '11111',
@@ -67,10 +100,120 @@ export function Home({route, navigation}) {
   ];
   //  AsyncStorage.setItem("cart",JSON.stringify(dataTest))
   // AsyncStorage.setItem("cart","[]")
+  const types = [
+    {
+      _id: 1,
+      name: 'Cơm',
+      image:
+        'https://i.pinimg.com/564x/94/08/4b/94084ba112450fcd46bacfa59ad33340.jpg',
+    },
+    {
+      _id: 2,
+      name: 'Bún/Phở',
+      image:
+        'https://i.pinimg.com/564x/22/03/c5/2203c5133347cb94cbc4e2951ac2f1a0.jpg',
+    },
+    {
+      _id: 3,
+      name: 'Đồ ăn nhanh',
+      image: 'https://cdn-icons-png.flaticon.com/512/4478/4478263.png',
+    },
+    {
+      _id: 4,
+      name: 'Đồ uống',
+      image:
+        'https://i.pinimg.com/564x/b1/f8/d6/b1f8d6fed94b0fd7108f6d981e91d724.jpg',
+    },
+  ];
+
+  function renderTypes(foods) {
+    const renderItem = ({item, index}) => {
+      return (
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            //   marginLeft: index == 0 ? SIZES.padding : 0,
+            //   marginRight: SIZES.radius,
+            flexDirection: 'column',
+            backgroundColor: COLOR.WHITE,
+            borderRadius: 20,
+            width: width * 0.25,
+            height: 100,
+            alignItems: 'center',
+          }}
+          onPress={() => {}}>
+          {/* Book Cover */}
+          <Image
+            source={{
+              uri: item.image,
+            }}
+            resizeMode="cover"
+            style={{
+              width: 50,
+              height: 50,
+              marginVertical: 10,
+            }}
+          />
+
+          {/* Info */}
+          <Text>{item.name}</Text>
+        </TouchableOpacity>
+      );
+    };
+    return (
+      <View style={{flex: 1, backgroundColor: COLOR.WHITE}}>
+        <FlatList
+          data={foods}
+          renderItem={renderItem}
+          keyExtractor={item => `${item._id}`}
+          //              pagingEnabled
+          horizontal
+          showsHorizontalScrollIndicator={false}
+        />
+      </View>
+    );
+  }
+
+  const calculateDeliveryPrice = async (userAddress, storeAddress) => {
+    // let travelDistance = 1;
+    
+      try {
+        const apiKey =
+          'Amn9jc6ebY9SAWGjrWUkv4SIPBGtADQQjxfJmsxmYzAeqCxkS4VMGVyDn1upfyiY';
+
+        const userAddressReplace = userAddress
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+        const storeAddressReplace = storeAddress
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+        const response = (await axios.get(
+          `http://dev.virtualearth.net/REST/V1/Routes/Driving?wp.0=${userAddressReplace}%2Cwa&wp.1=${storeAddressReplace}%2Cwa&avoid=minimizeTolls&key=${apiKey}`,
+        )).data.resourceSets[0].resources[0].travelDistance
+    //    console.log("(response) ======",response);
+          return response;
+          
+        // const resources = response.data.resourceSets[0].resources;
+        // travelDistance = resources[0].travelDistance;
+        //  console.log('Khoang cach', travelDistance);
+      } catch (error) {
+        console.log(error);
+        return 0
+      }
+    
+  };
 
   //Rendering
   function renderMyFoodsection(foods) {
     const renderItem = ({item, index}) => {
+      // let space = 0
+      // const newFunc = async () =>{
+      //  let ak = await calculateDeliveryPrice(user.address, item.address)
+      //  space = ak
+      //  }
+      //  newFunc()    
+
+ //  console.log("deliveryPrice",deliveryPrice)
       return (
         <TouchableOpacity
           style={{
@@ -98,9 +241,9 @@ export function Home({route, navigation}) {
             style={{
               width: 150,
               height: 150,
-              borderRadius: 20,
+              borderRadius: 16,
               borderWidth: 5,
-              borderColor: COLOR.GREEN,
+              borderColor: COLOR.MAIN,
               marginVertical: 10,
             }}
           />
@@ -126,28 +269,43 @@ export function Home({route, navigation}) {
               />
               <Text style={FONTS.tagNameItem}>Ưu đãi đến 35k</Text>
             </View>
-            <Text style={FONTS.nameItem}>{item.name}</Text>
-            <View style = {{flexDirection:'row'}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                // alignItems: 'center',
+               justifyContent: 'center',
+              }}>
+              <FontAwesome5 name="check-circle" size={20} color={COLOR.MAIN} style={{marginTop:2}} />
+              <Text style={[FONTS.nameItem, {marginLeft: 10}]}>
+                {item.name}
+              </Text>
+            </View>
+            <View style={{flexDirection: 'row'}}>
               <Text
                 style={{
                   color: COLOR.lightGray,
                   flexWrap: 'wrap-reverse',
                   fontSize: 17,
                 }}>
-                1.3 km
+                2.6 km
               </Text>
-                <Text style={{
+              <Text
+                style={{
                   color: COLOR.lightGray,
                   flexWrap: 'wrap-reverse',
                   fontSize: 17,
-                  marginLeft:20,
-                  marginRight:5
-                }}>4.7</Text>
-                 <Icon name="star" size={22} color={COLOR.YELLOW} />
+                  marginLeft: 20,
+                  marginRight: 5,
+                }}>
+                4.7
+              </Text>
+              <Icon name="star" size={22} color={COLOR.YELLOW2} />
             </View>
           </View>
         </TouchableOpacity>
       );
+    
+    
     };
     return (
       <View style={{flex: 1}}>
@@ -195,9 +353,9 @@ export function Home({route, navigation}) {
             style={{
               width: 130,
               height: 130,
-              borderRadius: 20,
+              borderRadius: 16,
               borderWidth: 5,
-              borderColor: COLOR.GREEN,
+              borderColor: COLOR.MAIN,
               marginVertical: 10,
             }}
           />
@@ -223,7 +381,17 @@ export function Home({route, navigation}) {
               />
               <Text style={FONTS.tagNameItem}>Ưu đãi đến 35k</Text>
             </View>
-            <Text style={FONTS.nameItem}>{item.name}</Text>
+            <View
+              style={{
+                flexDirection: 'row',
+                // alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <FontAwesome5 name="check-circle" size={20} color={COLOR.MAIN} style={{marginTop:2}} />
+              <Text style={[FONTS.nameItem, {marginLeft: 10}]}>
+                {item.name}
+              </Text>
+            </View>
             <Text
               style={{
                 color: COLOR.lightGray,
@@ -288,7 +456,7 @@ export function Home({route, navigation}) {
     return (
       <FlatList
         showsHorizontalScrollIndicator={false}
-        //  onViewableItemsChanged={onViewableItemsChangedHandler}
+         onViewableItemsChanged={onViewableItemsChangedHandler}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
         viewabilityConfig={{
           itemVisiblePercentThreshold: 50,
@@ -334,112 +502,120 @@ export function Home({route, navigation}) {
     }, [delay]);
   };
 
-  return (
-    <View
-      style={{
-        flex: 1,
-      }}>
+  if (user) {
+    return (
       <View
         style={{
-          width: width,
-          height: 70,
-          justifyContent: 'center',
-          backgroundColor: COLOR.WHITE,
-          flexDirection: 'row',
-          alignItems: 'center',
+          flex: 1,
         }}>
-        <TouchableOpacity
-          style={{
-            width: width * 0.7,
-            backgroundColor: COLOR.lightGray5,
-            height: 45,
-            marginLeft: SIZES.padding,
-            borderRadius: 20,
-            flexDirection: 'row',
-            alignItems: 'center',
-          }}>
-          <Image
-            source={icons.search_icon}
-            resizeMode="contain"
-            style={{
-              tintColor: COLOR.lightGray,
-              width: 20,
-              height: 20,
-              marginHorizontal: 25,
-            }}
-          />
-          <Text>Bạn muốn ăn gì?</Text>
-        </TouchableOpacity>
         <View
           style={{
-            width: width * 0.26,
-            height: 45,
+            width: width,
+            height: 70,
+            justifyContent: 'center',
+            backgroundColor: COLOR.WHITE,
             flexDirection: 'row',
-            justifyContent: 'space-evenly',
             alignItems: 'center',
           }}>
           <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('Cart');
+          onPress={() =>{navigation.navigate("SearchStore")}}
+            style={{
+              width: width * 0.7,
+              backgroundColor: COLOR.lightGray5,
+              height: 45,
+              marginLeft: SIZES.padding,
+              borderRadius: 20,
+              flexDirection: 'row',
+              alignItems: 'center',
             }}>
             <Image
-              source={icons.cart_icon}
+              source={icons.search_icon}
               resizeMode="contain"
               style={{
                 tintColor: COLOR.lightGray,
                 width: 20,
                 height: 20,
+                marginHorizontal: 25,
               }}
             />
+            <Text>Bạn muốn ăn gì?</Text>
           </TouchableOpacity>
-          <TouchableOpacity>
-            <Image
-              source={icons.chat_icon}
-              resizeMode="contain"
-              style={{
-                tintColor: COLOR.lightGray,
-                width: 20,
-                height: 20,
+          <View
+            style={{
+              width: width * 0.26,
+              height: 45,
+              flexDirection: 'row',
+              justifyContent: 'space-evenly',
+              alignItems: 'center',
+            }}>
+            <TouchableOpacity
+              style={{width: 40}}
+              onPress={() => {
+                navigation.navigate('Cart');
+                setReset(!reset)
+              }}>
+              <Icon name="shoppingcart" size={35} color={COLOR.BLACK} />
+              <View
+                style={{
+                  backgroundColor: 'red',
+                  marginTop: -15,
+                  borderRadius: 20,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  alignSelf: 'flex-end',
+                  paddingHorizontal: 5,
+                }}>
+                <Text style={{color: COLOR.WHITE, fontSize: 12}}>
+                  {cart.length}
+                </Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+               onPress={() => {
+                navigation.navigate('AddressPicker');
               }}
-            />
-          </TouchableOpacity>
+            >
+              <Icon name="message1" size={28} color={COLOR.BLACK} />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-      <ScrollView style={{marginTop: 0, flex: 1}}>
-        {/* <View style={{height: 170}}>
+        <ScrollView style={{marginTop: 0, flex: 1}}>
+          <View style={{height: 170}}>
           <Slider></Slider>
-        </View> */}
-        {/* <View style={{flex: 3, backgroundColor: COLOR.WHITE}}>
+        </View>
+          {/* <View style={{flex:3, backgroundColor: COLOR.WHITE}}>
           {CarouselAutoScroll(data, 3000)}
         </View> */}
-        <View
-          style={{
-            flex: 3,
-            justifyContent: 'center',
-            marginTop: 10,
-            backgroundColor: COLOR.WHITE,
-          }}>
-          <Text style={FONTS.titleFont}>Đề xuất cho bạn</Text>
-          {renderMyFoodsection(stores)}
-        </View>
-        <View
-          style={{
-            flex: 3,
-            justifyContent: 'center',
-            marginTop: 10,
-            backgroundColor: COLOR.WHITE,
-          }}>
-          <Text style={FONTS.titleFont}>Ưu đãi lớn</Text>
-          {renderMyFoodsection(stores)}
-        </View>
-        <View style={{flex: 3, backgroundColor: COLOR.WHITE, marginTop: 10}}>
-          <ScrollView horizontal>
-            {renderMyFoodsectionIntoColumn(stores)}
-          </ScrollView>
-        </View>
-      </ScrollView>
-    </View>
-  );
+          {renderTypes(types)}
+          <View
+            style={{
+              flex: 3,
+              justifyContent: 'center',
+              marginTop: 10,
+              backgroundColor: COLOR.WHITE,
+            }}>
+            <Text style={FONTS.titleFont}>Đề xuất cho bạn</Text>
+            {renderMyFoodsection(stores)}
+          </View>
+          <View
+            style={{
+              flex: 3,
+              justifyContent: 'center',
+              marginTop: 10,
+              backgroundColor: COLOR.WHITE,
+            }}>
+            <Text style={FONTS.titleFont}>Ưu đãi lớn</Text>
+            {renderMyFoodsection(stores)}
+          </View>
+          <View style={{flex: 3, backgroundColor: COLOR.WHITE, marginTop: 10}}>
+            <ScrollView horizontal>
+              {renderMyFoodsectionIntoColumn(stores)}
+            </ScrollView>
+          </View>
+        </ScrollView>
+      </View>
+    );
+  } else return <></>;
 }
 const styles = StyleSheet.create({
   customRatingBar: {

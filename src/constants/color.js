@@ -13,6 +13,7 @@ const COLOR = {
     GREEN3: "#189D97",
     PURPLE: "#A183E0",
     YELLOW: "yellow",
+    YELLOW2: "#F9F400",
     PRIMARY_LIGHT: "#C8EDD9",
     BLUE:"blue",
     RED:"red",

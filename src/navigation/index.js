@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Login, ChangePassword, Register, ConfirmAccount, ForgotPassword,Home,OrderDetail,ShiperTabs,
-    Tabs,Account,DetailStore,DetailItem,MyStoreInfomation,CreateProduct,Order,Cart,MyOrder,FavoriteStore } from '../screens';
+import { Login, ChangePassword, Register, ConfirmAccount, ForgotPassword,Home,OrderDetail,ShiperTabs,AddressPicker,SearchStore,
+    Tabs,Account,DetailStore,DetailItem,MyStoreInfomation,CreateProduct,Order,Cart,MyOrder,FavoriteStore,GetLocation1 } from '../screens';
 const Stack = createNativeStackNavigator();
 
 export function Navigation() {
@@ -27,6 +27,9 @@ export function Navigation() {
                 <Stack.Screen name="FavoriteStore" component={FavoriteStore} />
                 <Stack.Screen name="OrderDetail" component={OrderDetail} />
                 <Stack.Screen name="ShiperTabs" component={ShiperTabs} />
+                <Stack.Screen name="GetLocation" component={GetLocation1} />
+                <Stack.Screen name="AddressPicker" component={AddressPicker} />
+                <Stack.Screen name="SearchStore" component={SearchStore} />
             </Stack.Navigator>
         </NavigationContainer>
     )

@@ -21,3 +21,6 @@ export {OrderDetail} from './order.detail';
 export {HomeShipper} from './home.shipper';
 export {OrderShiper} from './order.shipper';
 export {ShiperTabs} from './tabs.shipper';
+export {GetLocation1} from './location';
+export {AddressPicker} from './address';
+export {SearchStore} from './search.store';

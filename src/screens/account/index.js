@@ -1,4 +1,4 @@
-import React from 'react';
+import React,{useState,useEffect} from 'react';
 import {
   Text,
   View,
@@ -11,9 +11,28 @@ import {
 } from 'react-native';
 import { COLOR, SIZES, FONTS ,icons} from "../../constants";
 import {userInfor,data,dataActivities} from "../../data/data";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment';
 const {width, height} = Dimensions.get('window');
 
 export const Account = ({navigation}) => {
+
+  const [user, setUser] = useState(null);
+
+
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(result => {
+      console.log(result);
+      setUser(JSON.parse(result));
+    });
+  }, []);
+
+  const handleLogout = async () =>{
+    await AsyncStorage.setItem('cart', "[]").then(() =>{
+      navigation.navigate('Login')
+    })
+  }
+
   function renderHeader() {
     return (
       <View
@@ -53,20 +72,20 @@ export const Account = ({navigation}) => {
     );
   }
 
-  function renderInforUser(user) {
+  function renderInforUser() {
     return (
       <View style={{flex: 1}}>
         <TouchableOpacity
           style={{height: 130, justifyContent: 'center', alignItems: 'center'}}>
           <Image
             source={{
-              uri: userInfor.avatar,
+              uri: user.avatar,
             }}
             resizeMode="cover"
             style={{
               // tintColor: "green",
-              width: 80,
-              height: 80,
+              width: 100,
+              height: 100,
               borderRadius: 50,
             }}
           />
@@ -85,7 +104,7 @@ export const Account = ({navigation}) => {
           <View style={{justifyContent: 'center'}}>
             <Text style={{color: COLOR.GREY_DARK, fontSize: 16}}>Tên</Text>
             <Text style={{color: COLOR.BLACK, fontSize: 18}}>
-              {userInfor.name}
+              {user.fullname}
             </Text>
           </View>
           <Image
@@ -113,7 +132,7 @@ export const Account = ({navigation}) => {
               Số điện thoại
             </Text>
             <Text style={{color: COLOR.BLACK, fontSize: 18}}>
-              {userInfor.sdt}
+              {user.phone}
             </Text>
           </View>
           <Image
@@ -139,7 +158,7 @@ export const Account = ({navigation}) => {
           <View style={{justifyContent: 'center'}}>
             <Text style={{color: COLOR.GREY_DARK, fontSize: 16}}>Email</Text>
             <Text style={{color: COLOR.BLACK, fontSize: 18}}>
-              {userInfor.email}
+              {user.email}
             </Text>
           </View>
           <Image
@@ -163,9 +182,9 @@ export const Account = ({navigation}) => {
             borderWidth: 1,
           }}>
           <View style={{justifyContent: 'center'}}>
-            <Text style={{color: COLOR.GREY_DARK, fontSize: 16}}>Giới tính</Text>
+            <Text style={{color: COLOR.GREY_DARK, fontSize: 16}}>Địa chỉ</Text>
             <Text style={{color: COLOR.BLACK, fontSize: 18}}>
-              {userInfor.gender}
+              {user.address}
             </Text>
           </View>
           <Image
@@ -191,7 +210,9 @@ export const Account = ({navigation}) => {
           <View style={{justifyContent: 'center'}}>
             <Text style={{color: COLOR.GREY_DARK, fontSize: 16}}>Ngày sinh</Text>
             <Text style={{color: COLOR.BLACK, fontSize: 18}}>
-              {userInfor.date}
+              {moment(user.birthday).format('DD-MM-YYYY')}
+              
+              
             </Text>
           </View>
           <Image
@@ -231,12 +252,15 @@ export const Account = ({navigation}) => {
             }}
           />
         </TouchableOpacity>
-        <TouchableOpacity style={{justifyContent:'center',alignItems:'center',backgroundColor:COLOR.WHITE,marginVertical:20,height:60}}>
+        <TouchableOpacity 
+        onPress={handleLogout}
+        style={{justifyContent:'center',alignItems:'center',backgroundColor:COLOR.WHITE,marginVertical:20,height:60}}>
             <Text style={{color:'red',fontSize:20}}>Đăng xuất</Text>
         </TouchableOpacity>
       </View>
     );
   }
+ if(user){
   return (
     <ScrollView
       style={{
@@ -254,5 +278,7 @@ export const Account = ({navigation}) => {
       </View>
     </ScrollView>
   );
+ }
+ else return <></>
 };
 

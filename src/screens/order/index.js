@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Text,
   View,
@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Fontisto from 'react-native-vector-icons/Fontisto';
 import {COLOR, SIZES} from '../../constants';
-import { createOrder } from '../../api';
+import {createOrder, calculateDelivery} from '../../api';
 const {width, height} = Dimensions.get('window');
 
 export function Order({navigation}) {
@@ -22,6 +22,8 @@ export function Order({navigation}) {
   const [fee, setFee] = useState(20000);
   const [user, setUser] = useState(null);
   const [store, setStore] = useState(null);
+  const [space, setSpace] = useState(0);
+
   useEffect(() => {
     AsyncStorage.getItem('cart').then(result => {
       console.log('resurl===', JSON.parse(result));
@@ -36,9 +38,34 @@ export function Order({navigation}) {
       setStore(JSON.parse(result));
     });
   }, []);
+  useEffect(() => {
+    if (user && store) {
+      const fetchData = async () => {
+        userAddress = user.address;
+        storeAddress = store.address;
+
+        const pr = await calculateDelivery({userAddress, storeAddress});
+        console.log('PR', pr);
+        setSpace(pr);
+        setFee(pr * 5000);
+      };
+      fetchData();
+    }
+  }, [store, user]);
+
+  console.log('space', space);
+
   function countTotal(accumulator, current) {
     return accumulator + current.total;
   }
+
+  // function countTotal(accumulator, current) {
+  //   return accumulator + (current.price - (current.price / 100) * current.discount);
+  // }
+
+  function currencyFormat(num) {
+    return  num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+ }
   let total = cart.reduce(countTotal, 0);
   function renderHeader() {
     return (
@@ -55,103 +82,178 @@ export function Order({navigation}) {
       </View>
     );
   }
-  const renderCartItem = (cart) => {
+  const renderCartItem = cart => {
     const renderItem = ({item}) => {
-      return ( <TouchableOpacity style={styles.inforItemContainer}>
-        <View style={{flexDirection:'row',alignItems:'center'}}>
-        <Text style={{color:COLOR.MAIN, fontSize:16, fontWeight:'500'}}>{item.quantity}x</Text>
+      return (
+        <TouchableOpacity style={styles.inforItemContainer}>
+          <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            <Text style={{color: COLOR.MAIN, fontSize: 16, fontWeight: '500'}}>
+              {item.quantity}x
+            </Text>
 
-            <Text style={[styles.txtStyle,{fontSize:20,fontWeight:'600', marginLeft:20}]}>{item.name}</Text>
-
-        </View>
-        <Text style={[styles.txtStyle,{fontSize:16}]}>{item.total}</Text>
-      </TouchableOpacity>)
-    }
-      return (<View>
-        <FlatList 
+            <Text
+              style={[
+                styles.txtStyle,
+                {fontSize: 20, fontWeight: '600', marginLeft: 20},
+              ]}>
+              {item.name}
+            </Text>
+          </View>
+          <Text style={[styles.txtStyle, {fontSize: 16}]}>{currencyFormat(
+                      item.price - (item.price / 100) * item.discount,
+                    )} ₫</Text>
+        </TouchableOpacity>
+      );
+    };
+    return (
+      <View>
+        <FlatList
           data={cart}
           renderItem={renderItem}
           keyExtractor={item => `${item._id}`}
           showsVerticalScrollIndicator={false}
         />
-      </View>)
-  }
+      </View>
+    );
+  };
 
   function renderInforOrder() {
-    return (
-      <ScrollView style={styles.inforOrderContainer}>
-        <View>
-          <TouchableOpacity style={styles.inforItemContainer}>
-            <View style={{flexDirection:'row'}}>
-              <Icon name="motorcycle" size={25} color={COLOR.GREEN2} />
-              <View style={{marginLeft: 20}}>
-                <Text style={[styles.txtStyle,{fontSize:18,fontWeight:'600'}]}>Giao hàng</Text>
-                <Text>Giao hàng ngay (30 phút)</Text>
+    if (space) {
+      return (
+        <ScrollView style={styles.inforOrderContainer}>
+          <View>
+            <TouchableOpacity style={styles.inforItemContainer}>
+              <View style={{flexDirection: 'row'}}>
+                <Icon name="motorcycle" size={25} color={COLOR.GREEN2} />
+                <View style={{marginLeft: 20}}>
+                  <Text
+                    style={[
+                      styles.txtStyle,
+                      {fontSize: 18, fontWeight: '600'},
+                    ]}>
+                    Giao hàng
+                  </Text>
+                  <Text>Giao hàng ngay (30 phút)</Text>
+                </View>
               </View>
-            </View>
-            <Icon name="angle-right" size={25} color={COLOR.BLACK} />
-          </TouchableOpacity>   
-          <TouchableOpacity style={styles.inforItemContainer}>
-            <View style={{flexDirection:'row'}}>
-              <Icon name="map-marker-alt" size={25} color={COLOR.RED} />
-              <View style={{marginLeft: 20}}>
-                <Text style={[styles.txtStyle,{fontSize:20,fontWeight:'600'}]}>334/25 Lê Quang Định</Text>
-                <Text>Khoảng 2 Km</Text>
+              <Icon name="angle-right" size={25} color={COLOR.BLACK} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.inforItemContainer}>
+              <View style={{flexDirection: 'row'}}>
+                <Icon name="map-marker-alt" size={25} color={COLOR.RED} />
+                <View style={{marginLeft: 20}}>
+                  {user && (
+                    <Text
+                      style={[
+                        styles.txtStyle,
+                        {fontSize: 20, fontWeight: '600'},
+                      ]}>
+                      {user.address}
+                    </Text>
+                  )}
+                  {/* {space && <Text>Khoảng {space} Km</Text>} */}
+                  <Text style={{fontSize: 16}}>{space} Km</Text>
+                </View>
               </View>
-            </View>
-            <Icon name="angle-right" size={25} color={COLOR.BLACK} />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.itemsOrderContainer}>
-            <Text style={[styles.txtStyle,{fontSize:20,marginHorizontal:20,fontWeight:'600'}]}>Tóm tắt đơn đặt hàng</Text>
-           <ScrollView horizontal>{renderCartItem(cart)}</ScrollView>
+              <Icon name="angle-right" size={25} color={COLOR.BLACK} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.itemsOrderContainer}>
+            <Text
+              style={[
+                styles.txtStyle,
+                {fontSize: 20, marginHorizontal: 20, fontWeight: '600'},
+              ]}>
+              Tóm tắt đơn đặt hàng
+            </Text>
+            <ScrollView horizontal>{renderCartItem(cart)}</ScrollView>
             <View>
-                <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between', paddingHorizontal:20,marginTop:10}}>
-                    <Text style={[styles.txtStyle,{fontSize:16}]}>Tổng tạm tính</Text>
-                    <Text style={[styles.txtStyle,{fontSize:16}]}>{total}</Text>
-                </View>
-                <View style={{flexDirection:'row',alignItems:'center',justifyContent:'space-between', paddingHorizontal:20,marginTop:10}}>
-                    <Text style={[styles.txtStyle,{fontSize:16}]}>Phí áp dụng</Text>
-                    <Text style={[styles.txtStyle,{fontSize:16}]}>{fee}</Text>
-                </View>
-            </View>
-        </View>
-        <View style={styles.itemsOrderContainer}>
-        <Text style={[styles.txtStyle,{fontSize:20,marginHorizontal:20,fontWeight:'600'}]}>Tùy chọn</Text>
-        <TouchableOpacity style={styles.optionItemContainer}>
-            <View style={{flexDirection:'row'}}>
-              <Icon name="money-bill" size={25} color={COLOR.lightGray} />
-              <View style={{marginLeft: 20}}>
-                <Text style={[styles.txtStyle,{fontSize:16}]}>Tiền mặt</Text>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 20,
+                  marginTop: 10,
+                }}>
+                <Text style={[styles.txtStyle, {fontSize: 16}]}>
+                  Tổng tạm tính
+                </Text>
+                <Text style={[styles.txtStyle, {fontSize: 16}]}>{currencyFormat(total)} ₫</Text>
+              </View>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingHorizontal: 20,
+                  marginTop: 10,
+                }}>
+                <Text style={[styles.txtStyle, {fontSize: 16}]}>
+                  Phí áp dụng
+                </Text>
+                <Text style={[styles.txtStyle, {fontSize: 16}]}>{currencyFormat(fee)} ₫</Text>
               </View>
             </View>
-            <Icon name="angle-right" size={25} color={COLOR.BLACK} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.optionItemContainer}>
-            <View style={{flexDirection:'row'}}>
-              <Fontisto name="shopping-sale" size={30} color={COLOR.ORGANGE} />
-              <View style={{marginLeft: 20}}>
-                <Text style={[styles.txtStyle,{fontSize:16}]}>Áp dụng ưu đãi để được giảm giá</Text>
+          </View>
+          <View style={styles.itemsOrderContainer}>
+            <Text
+              style={[
+                styles.txtStyle,
+                {fontSize: 20, marginHorizontal: 20, fontWeight: '600'},
+              ]}>
+              Tùy chọn
+            </Text>
+            <TouchableOpacity style={styles.optionItemContainer}>
+              <View style={{flexDirection: 'row'}}>
+                <Icon name="money-bill" size={25} color={COLOR.lightGray} />
+                <View style={{marginLeft: 20}}>
+                  <Text style={[styles.txtStyle, {fontSize: 16}]}>
+                    Tiền mặt
+                  </Text>
+                </View>
               </View>
-            </View>
-            <Icon name="angle-right" size={25} color={COLOR.BLACK} />
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    );
+              <Icon name="angle-right" size={25} color={COLOR.BLACK} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.optionItemContainer}>
+              <View style={{flexDirection: 'row'}}>
+                <Fontisto
+                  name="shopping-sale"
+                  size={30}
+                  color={COLOR.ORGANGE}
+                />
+                <View style={{marginLeft: 20}}>
+                  <Text style={[styles.txtStyle, {fontSize: 16}]}>
+                    Áp dụng ưu đãi để được giảm giá
+                  </Text>
+                </View>
+              </View>
+              <Icon name="angle-right" size={25} color={COLOR.BLACK} />
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      );
+    }
   }
   const handleOrder = async () => {
-    
-   // let [userId,storeId,name,products,shippingfee,totalPrice]  = [user._id,store._id,user.name,cart,fee,total+fee]
-   const userId = user._id
-   const storeId =store._id
-   const name = store.name
-   const products = cart
-   const shippingfee = fee
-   const totalPrice = total+fee
-    await createOrder({userId,storeId,name,products,shippingfee,totalPrice,navigation})
+    // let [userId,storeId,name,products,shippingfee,totalPrice]  = [user._id,store._id,user.name,cart,fee,total+fee]
+    const userId = user._id;
+    const storeId = store._id;
+    const name = store.name;
+    const products = cart;
+    const shippingfee = fee;
+    const totalPrice = total + fee;
+    await createOrder({
+      userId,
+      storeId,
+      name,
+      products,
+      shippingfee,
+      totalPrice,
+      navigation,
+    });
     AsyncStorage.setItem('cart', '[]');
-  }
+  };
 
   const renderFooter = () => {
     return (
@@ -159,7 +261,7 @@ export function Order({navigation}) {
         <View style={styles.totalPriceContainer}>
           <Text style={[styles.txtStyle, {fontSize: 18}]}>Tổng cộng</Text>
           <Text style={[styles.txtStyle, {fontSize: 18, fontWeight: '600'}]}>
-           {total+fee}
+            {currencyFormat(total + fee)} ₫
           </Text>
         </View>
         <TouchableOpacity
@@ -206,27 +308,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 20,
     justifyContent: 'space-between',
-    borderBottomWidth:1,
+    borderBottomWidth: 1,
     borderBottomColor: COLOR.lightGray2,
-    backgroundColor:COLOR.WHITE,
-    width : width-40
-
+    backgroundColor: COLOR.WHITE,
+    width: width - 40,
   },
-  txtStyle:{
-    color: COLOR.BLACK
+  txtStyle: {
+    color: COLOR.BLACK,
   },
-  itemsOrderContainer:{
-    borderTopWidth:5,
-    borderColor:COLOR.lightGray2,
-    paddingVertical:10
+  itemsOrderContainer: {
+    borderTopWidth: 5,
+    borderColor: COLOR.lightGray2,
+    paddingVertical: 10,
   },
- optionItemContainer : {
+  optionItemContainer: {
     flexDirection: 'row',
     height: 60,
     alignItems: 'center',
     marginHorizontal: 20,
     justifyContent: 'space-between',
-    backgroundColor:COLOR.WHITE
+    backgroundColor: COLOR.WHITE,
   },
   footerContainer: {
     height: 150,
@@ -249,5 +350,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
 });

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Text,
   View,
@@ -10,13 +10,21 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { COLOR, SIZES, FONTS ,icons} from "../../constants";
-import {userInfor,data,dataActivities} from "../../data/data";
-import { Navigation } from '../../navigation';
+import {COLOR, SIZES, FONTS, icons} from '../../constants';
+import {userInfor, data, dataActivities} from '../../data/data';
+import {Navigation} from '../../navigation';
 const {width, height} = Dimensions.get('window');
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export function User({navigation}) {
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(result => {
+      console.log(result);
+      setUser(JSON.parse(result));
+    });
+  }, []);
+
   function renderHeader() {
     return (
       <View
@@ -57,55 +65,57 @@ export function User({navigation}) {
     );
   }
   const renderUser = () => {
-    return (
-      <TouchableOpacity
-        style={{
-          flex: 1,
-          marginLeft: 20,
-          flexDirection: 'row',
-          alignItems: 'center',
-          
-        }}
-        onPress ={() => navigation.navigate('Account')}
-        >
-        <View style={{flex: 4, flexDirection: 'row', alignItems: 'center'}}>
-          <Image
-            source={{
-              uri: userInfor.avatar,
-            }}
-            resizeMode="cover"
-            style={{
-              // tintColor: "green",
-              width: 60,
-              height: 60,
-              borderRadius: 50,
-            }}
-          />
-          <Text
-            style={{
-              color: COLOR.BLACK,
-              marginLeft: 20,
-              fontSize: 18,
-              fontWeight: '500',
-            }}>
-            {userInfor.name}
-          </Text>
-        </View>
-        <View style={{flex: 1}}>
-          <Image
-            source={icons.next_icon}
-            resizeMode="contain"
-            style={{
-              // tintColor: "green",
-              width: 25,
-              height: 25,
-              alignSelf: 'flex-end',
-              marginRight: 20,
-            }}
-          />
-        </View>
-      </TouchableOpacity>
-    );
+    if (user) {
+      return (
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            marginLeft: 20,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+          onPress={() => navigation.navigate('Account')}>
+          <View style={{flex: 4, flexDirection: 'row', alignItems: 'center'}}>
+            <Image
+              source={{
+                uri: userInfor.avatar,
+              }}
+              resizeMode="cover"
+              style={{
+                // tintColor: "green",
+                width: 60,
+                height: 60,
+                borderRadius: 50,
+              }}
+            />
+            <Text
+              style={{
+                color: COLOR.BLACK,
+                marginLeft: 20,
+                fontSize: 18,
+                fontWeight: '500',
+              }}>
+              {user.fullname}
+            </Text>
+          </View>
+          <View style={{flex: 1}}>
+            <Image
+              source={icons.next_icon}
+              resizeMode="contain"
+              style={{
+                // tintColor: "green",
+                width: 25,
+                height: 25,
+                alignSelf: 'flex-end',
+                marginRight: 20,
+              }}
+            />
+          </View>
+        </TouchableOpacity>
+      );
+    } else {
+      return <></>;
+    }
   };
 
   const renderActivity = () => {
@@ -119,10 +129,9 @@ export function User({navigation}) {
             borderWidth: 1,
             borderColor: COLOR.lightGray3,
           }}
-          onPress={() =>{
-            navigation.navigate("MyOrder")
-          }}
-          >
+          onPress={() => {
+            navigation.navigate('MyOrder');
+          }}>
           <Image
             source={icons.bill_icon}
             resizeMode="contain"
@@ -141,10 +150,9 @@ export function User({navigation}) {
             borderWidth: 1,
             borderColor: COLOR.lightGray3,
           }}
-          onPress={() =>{
-            navigation.navigate("FavoriteStore")
-          }}
-          >
+          onPress={() => {
+            navigation.navigate('FavoriteStore');
+          }}>
           <Image
             source={icons.heart_icon}
             resizeMode="contain"
@@ -158,31 +166,36 @@ export function User({navigation}) {
       </View>
     );
   };
-  function renderOptionAxtivities(dataActivities){
+  function renderOptionAxtivities(dataActivities) {
     const renderItem = ({item, index}) => {
       return (
-        <TouchableOpacity style={{height:60, flexDirection: 'row',alignItems:'center',marginLeft:20,
-          borderTopWidth: index == 0 ? 0 : 1,
-          borderTopColor: COLOR.lightGray3
-        }}>
-                <Image
-                  source={item.icon}
-                  resizeMode="contain"
-                  style={{
-                    width: 35,
-                    height: 35,
-                  }}
-                />
-                <Text
-                  style={{
-                    color: COLOR.BLACK,
-                    marginLeft: 20,
-                    fontSize: 18,
-                    fontWeight: '500',
-                  }}>
-                  {item.name}
-                </Text>
-              </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            height: 60,
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginLeft: 20,
+            borderTopWidth: index == 0 ? 0 : 1,
+            borderTopColor: COLOR.lightGray3,
+          }}>
+          <Image
+            source={item.icon}
+            resizeMode="contain"
+            style={{
+              width: 35,
+              height: 35,
+            }}
+          />
+          <Text
+            style={{
+              color: COLOR.BLACK,
+              marginLeft: 20,
+              fontSize: 18,
+              fontWeight: '500',
+            }}>
+            {item.name}
+          </Text>
+        </TouchableOpacity>
       );
     };
     return (
@@ -195,20 +208,36 @@ export function User({navigation}) {
         />
       </View>
     );
-  };
+  }
 
   return (
     <View
       style={{
         flex: 1,
       }}>
-      <View style={{height: 50,backgroundColor:COLOR.WHITE}}>{renderHeader()}</View>
-      <View style={{height: 80,backgroundColor:COLOR.WHITE}}>{renderUser()}</View>
-      <View style={{height: 80,backgroundColor:COLOR.WHITE}}>{renderActivity()}</View>
-      <View style={{height:360, marginTop:10,backgroundColor:COLOR.WHITE}}>{renderOptionAxtivities(dataActivities)}</View>
-      <View style={{height:60,marginTop:10,backgroundColor:COLOR.WHITE, justifyContent:'center'}}>
-        <Text style={{marginLeft:20, fontSize:18,color:COLOR.BLACK}}>Phiên bản hiện tại v1.1.1</Text>
+      <View style={{height: 50, backgroundColor: COLOR.WHITE}}>
+        {renderHeader()}
+      </View>
+      <View style={{height: 80, backgroundColor: COLOR.WHITE}}>
+        {renderUser()}
+      </View>
+      <View style={{height: 80, backgroundColor: COLOR.WHITE}}>
+        {renderActivity()}
+      </View>
+      <View style={{height: 360, marginTop: 10, backgroundColor: COLOR.WHITE}}>
+        {renderOptionAxtivities(dataActivities)}
+      </View>
+      <View
+        style={{
+          height: 60,
+          marginTop: 10,
+          backgroundColor: COLOR.WHITE,
+          justifyContent: 'center',
+        }}>
+        <Text style={{marginLeft: 20, fontSize: 18, color: COLOR.BLACK}}>
+          Phiên bản hiện tại v1.1.1
+        </Text>
       </View>
     </View>
   );
-  }
+}

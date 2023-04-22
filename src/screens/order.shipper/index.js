@@ -19,15 +19,18 @@ import {getOrderByShipperId} from '../../api';
 const {width, height} = Dimensions.get('window');
 
 export function OrderShiper({navigation}) {
- // const [userCurrent, setUserCurrent] = useState(null);
+  // const [userCurrent, setUserCurrent] = useState(null);
   const [shipperId, setShipperId] = useState(null);
   const [orders, setOrders] = useState(null);
   const [load, setLoad] = useState(true);
+  const [subTab, setSubTab] = useState(2);
+  const [status, setStatus] = useState('Chờ lấy');
+  const [orderWithStatus, setOrderWithStatus] = useState(null);
 
   useEffect(() => {
     AsyncStorage.getItem('user').then(result => {
- //     setUserCurrent(JSON.parse(result));
-      setShipperId(JSON.parse(result)._id)
+      //     setUserCurrent(JSON.parse(result));
+      setShipperId(JSON.parse(result)._id);
     });
   }, []);
   useEffect(() => {
@@ -38,9 +41,134 @@ export function OrderShiper({navigation}) {
       };
       fetchData();
     }
-  }, [shipperId,load]);
-  console.log("shipperId ====>",shipperId)
-  console.log("orders ====>",orders)
+  }, [shipperId, load,subTab]);
+  useEffect(() => {
+    if (orders) {
+      setOrderWithStatus(orders.filter(checkStatus1));
+      function checkStatus1(item) {
+        return item.status == status;
+      }
+    }
+  }, [status, orders]);
+
+  console.log('shipperId ====>', shipperId);
+  console.log('orders ====>', orders);
+
+  const renderOrders = () => {
+    return (
+      <ScrollView
+        horizontal
+        style={styles.tabsContainer}
+        showsHorizontalScrollIndicator={false}>
+        {/* <TouchableOpacity
+          onPress={() => {
+            setSubTab(1);
+            setStatus("Chờ xác nhận")
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 1 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 1 ? 1 : 0,
+
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 1 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Chờ xác nhận
+          </Text>
+        </TouchableOpacity> */}
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(2);
+            setStatus('Chờ lấy');
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 2 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 2 ? 1 : 0,
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 2 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Chờ lấy
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(3);
+            setStatus('Đang giao');
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 3 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 3 ? 1 : 0,
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 3 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Đang giao
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(4);
+            setStatus('Đã giao');
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 4 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 4 ? 1 : 0,
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 4 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Đã giao
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            setSubTab(5);
+            //  setStatus("Đã hủy")
+          }}
+          style={{
+            width: width * 0.25,
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderBottomColor: subTab == 5 ? COLOR.ORGANGE : COLOR.lightGray4,
+            borderBottomWidth: subTab == 5 ? 1 : 0,
+          }}>
+          <Text
+            style={{
+              fontSize: 16,
+              fontWeight: '500',
+              color: subTab == 5 ? COLOR.ORGANGE : COLOR.BLACK,
+            }}>
+            Tất cả
+          </Text>
+        </TouchableOpacity>
+      </ScrollView>
+    );
+  };
 
   const renderListOrder = data => {
     const itemSize = width - 20;
@@ -61,7 +189,7 @@ export function OrderShiper({navigation}) {
             borderColor: COLOR.lightGray5,
           }}
           onPress={() => {
-            navigation.navigate("OrderDetail",{data:item})
+            navigation.navigate('OrderDetail', {data: item});
           }}>
           <View
             style={{
@@ -104,22 +232,25 @@ export function OrderShiper({navigation}) {
     );
   };
 
-
   return (
-    <View
-      style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.headerContainer}>
-      <Text style={{fontSize:22,fontWeight:'800',color:COLOR.BLACK}}>Đơn Hàng đã nhận</Text>
-      <TouchableOpacity
-        onPress={()=> setLoad(!load)}
-      ><Icon name="redo-alt" size={25} color={COLOR.BLACK} /></TouchableOpacity>
+        <Text style={{fontSize: 22, fontWeight: '800', color: COLOR.BLACK}}>
+          Đơn Hàng đã nhận
+        </Text>
+        <TouchableOpacity onPress={() => setLoad(!load)}>
+          <Icon name="redo-alt" size={25} color={COLOR.BLACK} />
+        </TouchableOpacity>
       </View>
-      <View style={{height:10,backgroundColor:COLOR.lightGray2}}></View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <View style={{height: 10, backgroundColor: COLOR.lightGray2}}></View>
+      <View style={{height: 50}}>{renderOrders()}</View>
+      {/* <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {orders && renderListOrder(orders)}
-      </ScrollView>
+      </ScrollView> */}
+      {orderWithStatus && subTab != 5 && renderListOrder(orderWithStatus)}
+      {orders && subTab == 5 && renderListOrder(orders)}
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -128,11 +259,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLOR.WHITE,
   },
   headerContainer: {
-    height:70,
-    alignItems:'center',
-    marginHorizontal:10, 
-    flexDirection:'row',
-    justifyContent:'space-between'
-  }
-
+    height: 70,
+    alignItems: 'center',
+    marginHorizontal: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 10,
+    flex: 1,
+  },
 });

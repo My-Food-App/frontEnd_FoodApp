@@ -2,16 +2,17 @@ import React from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native";
 import { DismissKeyboardView, Header, Container } from "../components";
+import { ScrollView } from "react-native-gesture-handler";
 
 export function Authentication({children}) {
     return (
         <DismissKeyboardView>
-            <SafeAreaView style={styles.container}>
+            <ScrollView style={styles.container}>
                 <Header/>
                 <Container>
                     {children}
                 </Container>
-            </SafeAreaView>
+            </ScrollView>
         </DismissKeyboardView>
     )
 }

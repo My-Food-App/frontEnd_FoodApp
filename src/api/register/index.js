@@ -9,6 +9,7 @@ export const register = async ({
   fullname,
   phone,
   navigation,
+  address
 }) => {
   var data = JSON.stringify({
     username,
@@ -16,6 +17,7 @@ export const register = async ({
     email,
     fullname,
     phone,
+    address
   });
 
   var config = {

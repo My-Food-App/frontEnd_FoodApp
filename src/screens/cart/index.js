@@ -64,6 +64,12 @@ export function Cart({navigation}) {
   function countTotal(accumulator, current) {
     return accumulator + current.total;
   }
+  // function countTotal(accumulator, current) {
+  //   return accumulator + (current.price - (current.price / 100) * current.discount);
+  // }
+  function currencyFormat(num) {
+    return  num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+ }
   // console.log(cart.reduce(countTotal, 0));
   if(cart){
     var total = cart.reduce(countTotal, 0);
@@ -127,7 +133,9 @@ export function Cart({navigation}) {
               justifyContent: 'space-between',
               marginVertical: 10,
             }}>
-            <Text style={styles.txtPrice}>{item.total} đ</Text>
+            <Text style={styles.txtPrice}>{currencyFormat(
+                      item.price - (item.price / 100) * item.discount,
+                    )} ₫</Text>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
               <TouchableOpacity
                 style={styles.btnContainer}
@@ -175,7 +183,7 @@ export function Cart({navigation}) {
         <View style={styles.totalPriceContainer}>
           <Text style={[styles.txtStyle, {fontSize: 18}]}>Tổng cộng</Text>
           <Text style={[styles.txtStyle, {fontSize: 18, fontWeight: '600'}]}>
-            {total}₫
+            {currencyFormat(total)} ₫
           </Text>
         </View>
         <TouchableOpacity

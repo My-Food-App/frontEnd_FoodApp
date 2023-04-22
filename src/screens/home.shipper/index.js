@@ -32,7 +32,7 @@ export function HomeShipper({navigation}) {
     };
     fetchData();
   }, [load]);
-
+  console.log("=======================================")
   const renderListOrder = data => {
     const itemSize = width - 20;
     const renderItem = ({item, index}) => {

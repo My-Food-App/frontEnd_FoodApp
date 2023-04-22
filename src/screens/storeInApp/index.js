@@ -10,12 +10,15 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
-import {findProductByIdStore} from '../../api';
+import {findProductByIdStore, calculateDelivery} from '../../api';
 const {width, height} = Dimensions.get('window');
 export const DetailStore = ({route, navigation}) => {
   const [data, setData] = useState(null);
   const [product, setProduct] = useState(null);
+  const [user, setUser] = useState(null);
+  const [space, setSpace] = useState(null);
   useEffect(() => {
     let {data} = route.params;
     setData(data);
@@ -31,7 +34,32 @@ export const DetailStore = ({route, navigation}) => {
       fetchData();
     }
   }, [data]);
-  console.log('Product ====== ', product);
+
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(result => {
+      console.log(result);
+      setUser(JSON.parse(result));
+    });
+  }, []);
+
+  useEffect(() => {
+    if (user && data) {
+      const fetchData = async () => {
+        userAddress = user.address;
+        storeAddress = data.address;
+
+        const pr = await calculateDelivery({userAddress, storeAddress});
+        setSpace(pr);
+      };
+      fetchData();
+    }
+  }, [data, user]);
+
+  function currencyFormat(num) {
+    return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+  }
+
+  // console.log('Product ====== ', product);
   // Render data
   const renderDataItem = data => {
     console.log(data);
@@ -135,7 +163,7 @@ export const DetailStore = ({route, navigation}) => {
                 flexDirection: 'row',
                 alignItems: 'center',
               }}>
-              <View
+             {space &&  <View
                 style={{flex: 4, flexDirection: 'row', alignItems: 'center'}}>
                 <Image
                   source={icons.shiper_icon}
@@ -146,16 +174,18 @@ export const DetailStore = ({route, navigation}) => {
                     height: 35,
                   }}
                 />
-                <Text
-                  style={{
-                    color: COLOR.BLACK,
-                    marginLeft: 20,
-                    fontSize: 18,
-                    fontWeight: '500',
-                  }}>
-                  0.4Km (30p)
-                </Text>
-              </View>
+                
+                  <Text
+                    style={{
+                      color: COLOR.BLACK,
+                      marginLeft: 20,
+                      fontSize: 18,
+                      fontWeight: '500',
+                    }}>
+                    {space.toFixed(2)} Km ({(space * 7).toFixed(1)} phút)
+                  </Text>
+                
+              </View>}
               <View style={{flex: 1}}>
                 <Image
                   source={icons.next_icon}
@@ -223,7 +253,7 @@ export const DetailStore = ({route, navigation}) => {
             marginRight: SIZES.radius,
             flexDirection: 'row',
             backgroundColor: COLOR.WHITE,
-            borderRadius: 20,
+            borderRadius: 16,
             width: itemSize,
             height: 150,
             alignItems: 'center',
@@ -245,7 +275,7 @@ export const DetailStore = ({route, navigation}) => {
               height: 130,
               borderRadius: 20,
               borderWidth: 5,
-              borderColor: COLOR.GREEN,
+              borderColor: COLOR.MAIN,
               marginVertical: 10,
             }}
           />
@@ -274,14 +304,61 @@ export const DetailStore = ({route, navigation}) => {
             <Text numberOfLines={2} style={FONTS.nameItem}>
               {item.name}
             </Text>
-            <Text
-              style={{
-                color: COLOR.lightGray,
-                flexWrap: 'wrap-reverse',
-                fontSize: 17,
-              }}>
-              Giá: {item.price} đ
-            </Text>
+            {item.discount == 0 && (
+              <View style={{flexDirection: 'row'}}>
+                <Text
+                  style={{
+                    color: COLOR.lightGray,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  Giá:{' '}
+                </Text>
+                <Text
+                  style={{
+                    color: COLOR.RED,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  {currencyFormat(item.price)} ₫
+                </Text>
+              </View>
+            )}
+            {item.discount !== 0 && (
+              <View style={{flexDirection: 'row'}}>
+                <Text
+                  style={{
+                    color: COLOR.lightGray,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  Giá:{' '}
+                </Text>
+                <View>
+                  <Text
+                    style={{
+                      color: COLOR.lightGray,
+                      flexWrap: 'wrap-reverse',
+                      fontSize: 17,
+                      textDecorationLine: 'line-through',
+                      textDecorationStyle: 'solid',
+                    }}>
+                    {currencyFormat(item.price)} ₫
+                  </Text>
+                  <Text
+                    style={{
+                      color: COLOR.RED,
+                      flexWrap: 'wrap-reverse',
+                      fontSize: 17,
+                    }}>
+                    {currencyFormat(
+                      item.price - (item.price / 100) * item.discount,
+                    )}{' '}
+                    ₫
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
       );
@@ -332,9 +409,9 @@ export const DetailStore = ({route, navigation}) => {
             style={{
               width: 160,
               height: 160,
-              borderRadius: 20,
+              borderRadius: 16,
               borderWidth: 5,
-              borderColor: COLOR.GREEN,
+              borderColor: COLOR.MAIN,
               marginVertical: 10,
             }}
           />
@@ -363,14 +440,62 @@ export const DetailStore = ({route, navigation}) => {
             <Text numberOfLines={2} style={FONTS.nameItem}>
               {item.name}
             </Text>
-            <Text
-              style={{
-                color: COLOR.lightGray,
-                flexWrap: 'wrap-reverse',
-                fontSize: 17,
-              }}>
-              Giá: {item.price} đ
-            </Text>
+
+            {item.discount == 0 && (
+              <View style={{flexDirection: 'row'}}>
+                <Text
+                  style={{
+                    color: COLOR.lightGray,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  Giá:{' '}
+                </Text>
+                <Text
+                  style={{
+                    color: COLOR.RED,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  {currencyFormat(item.price)} ₫
+                </Text>
+              </View>
+            )}
+            {item.discount !== 0 && (
+              <View style={{flexDirection: 'row'}}>
+                <Text
+                  style={{
+                    color: COLOR.lightGray,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  Giá:{' '}
+                </Text>
+                <View>
+                  <Text
+                    style={{
+                      color: COLOR.lightGray,
+                      flexWrap: 'wrap-reverse',
+                      fontSize: 17,
+                      textDecorationLine: 'line-through',
+                      textDecorationStyle: 'solid',
+                    }}>
+                    {currencyFormat(item.price)} ₫
+                  </Text>
+                  <Text
+                    style={{
+                      color: COLOR.RED,
+                      flexWrap: 'wrap-reverse',
+                      fontSize: 17,
+                    }}>
+                    {currencyFormat(
+                      item.price - (item.price / 100) * item.discount,
+                    )}{' '}
+                    ₫
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         </TouchableOpacity>
       );
@@ -400,7 +525,7 @@ export const DetailStore = ({route, navigation}) => {
           backgroundColor: COLOR.WHITE,
         }}>
         <View style={{flex: 1}}>{renderDataItem(data)}</View>
-        {product && (
+        
           <View style={{flex: 1, marginTop: 20}}>
             <Text
               style={{
@@ -413,9 +538,9 @@ export const DetailStore = ({route, navigation}) => {
             </Text>
             <ScrollView horizontal>{renderMyFoodsection(product)}</ScrollView>
           </View>
-        )}
+        
 
-        {product && (
+       
           <View style={{flex: 1, marginTop: 20}}>
             <Text
               style={{
@@ -430,7 +555,7 @@ export const DetailStore = ({route, navigation}) => {
               {renderMyFoodsectionIntoColumn(product)}
             </ScrollView>
           </View>
-        )}
+        
       </ScrollView>
     );
   } else return <></>;

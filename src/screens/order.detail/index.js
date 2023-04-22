@@ -13,8 +13,9 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import {MyModal} from '../../components';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
-import {getUserbyId, updateOrderById, getStoreById} from '../../api';
+import {getUserbyId, updateOrderById, getStoreById,getOrderById} from '../../api';
 import moment from 'moment';
 const {width, height} = Dimensions.get('window');
 
@@ -23,16 +24,40 @@ export function OrderDetail({navigation, route}) {
   const [user, setUser] = useState(null);
   const [userCurrent, setUserCurrent] = useState(null);
   const [orderId, setOrderId] = useState(null);
+  const [order, setOrder] = useState(null);
   const [store, setStore] = useState(null);
   const [storeId, setStoreId] = useState(null);
   const [shipperId, setShipperId] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
   const [status, setStatus] = useState('Chờ lấy');
+  const [statusSelected, setStatusSelected] = useState(null);
+  const [statusClone, setStatusClone] = useState(null);
+  const listStatus = [
+    {id: 1, name: 'Chờ lấy'},
+    {id: 2, name: 'Đang giao'},
+    {id: 3, name: 'Đã giao'},
+  ];
+
   useEffect(() => {
     let {data} = route.params;
     setData(data);
     setOrderId(data._id);
     setStoreId(data.storeId);
+    setStatusSelected(data.status);
   }, [data]);
+
+  useEffect(() =>{
+    if(orderId){
+      const fetchData = async () =>{
+        const pr = await getOrderById({orderId})
+        setOrder(pr)
+        setStatusSelected(pr.status);
+      }
+      fetchData()
+    }
+  },[modalVisible,orderId])
+
+  console.log('orderId =>>>>>', orderId)
 
   useEffect(() => {
     if (data) {
@@ -69,14 +94,26 @@ export function OrderDetail({navigation, route}) {
       navigation.navigate('ShiperTabs');
     }
   };
-
+ useEffect(() => {
+  if(statusSelected){
+    setStatusClone(statusSelected);
+  }
+ },[statusSelected])
   console.log('User =>=====>', user);
   //console.log('userCurrent =>=====>', userCurrent);
 
   const handleUpdateStatus = () => {
     console.log('update');
+    setModalVisible(true);
   };
-
+  const handleConfirmChangeStatus = () => {
+    const status =  statusClone
+    updateOrderById({orderId, status});
+    setModalVisible(false);
+  }
+  function currencyFormat(num) {
+    return  num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+ }
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -110,7 +147,7 @@ export function OrderDetail({navigation, route}) {
               {item.name}
             </Text>
           </View>
-          <Text style={[styles.txtStyle, {fontSize: 16}]}>{item.total} ₫</Text>
+          <Text style={[styles.txtStyle, {fontSize: 16}]}>{currencyFormat(item.total)} ₫</Text>
         </TouchableOpacity>
       );
     };
@@ -148,7 +185,9 @@ export function OrderDetail({navigation, route}) {
             </View>
           )}
           {data.shipperId == userCurrent._id && (
-            <TouchableOpacity style={{alignItems: 'center'}} onPress={handleUpdateStatus}>
+            <TouchableOpacity
+              style={{alignItems: 'center'}}
+              onPress={handleUpdateStatus}>
               <Icon name="edit" size={30} color={COLOR.WHITE} />
               <Text
                 style={[styles.txtStatusOrder, {fontSize: 16, marginTop: 5}]}>
@@ -171,7 +210,7 @@ export function OrderDetail({navigation, route}) {
             </Text>
             <Text style={styles.txtInforUser}>{store.name}</Text>
             <Text style={styles.txtInforUser}>{store.phone}</Text>
-            <Text style={styles.txtInforUser}>{store.address.value}</Text>
+            <Text style={styles.txtInforUser}>{store.address}</Text>
           </View>
         </View>
         <View style={styles.clientInforContainer}>
@@ -188,7 +227,7 @@ export function OrderDetail({navigation, route}) {
             </Text>
             <Text style={styles.txtInforUser}>{user.fullname}</Text>
             <Text style={styles.txtInforUser}>{user.phone}</Text>
-            <Text style={styles.txtInforUser}>{user.address.value}</Text>
+            <Text style={styles.txtInforUser}>{user.address}</Text>
           </View>
         </View>
         <View style={styles.clientInforContainer}>
@@ -248,7 +287,7 @@ export function OrderDetail({navigation, route}) {
               Phí vận chuyển
             </Text>
             <Text style={[styles.txtStyle, {fontSize: 16, fontWeight: '400'}]}>
-              {data.shippingfee} ₫
+              {currencyFormat(data.shippingfee)} ₫
             </Text>
           </View>
           <View
@@ -263,7 +302,7 @@ export function OrderDetail({navigation, route}) {
               Thành tiền
             </Text>
             <Text style={{fontSize: 16, fontWeight: '400', color: COLOR.RED}}>
-              {data.totalPrice} ₫
+              {currencyFormat(data.totalPrice)} ₫
             </Text>
           </View>
           <View style={{paddingVertical: 10}}>
@@ -295,7 +334,7 @@ export function OrderDetail({navigation, route}) {
                 </Text>
                 <Text
                   style={{fontSize: 16, fontWeight: '400', color: COLOR.BLACK}}>
-                  {moment(data.created_date).format('YYYY-MM-DD hh:mm')}
+                  {moment(data.created_date).format('hh:mm DD-MM-YYYY')}
                 </Text>
               </View>
             </View>
@@ -305,12 +344,146 @@ export function OrderDetail({navigation, route}) {
     );
   }
 
-  if (data && user && store) {
+  const renderListStatusToChange = data => {
+    const renderItem = ({item}) => {
+      return (
+        <View>
+          {statusClone != item.name && <TouchableOpacity
+          onPress={()=>{setStatusClone(item.name)}}
+          style={{margin: 10, flexDirection: 'row', marginLeft: 20}}>
+          <Icon name="check" size={20} color={COLOR.BLACK} />
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '500',
+              color: COLOR.BLACK,
+              marginLeft: 10,
+            }}>
+            {item.name}
+          </Text>
+        </TouchableOpacity>}
+        {statusClone == item.name && <TouchableOpacity
+         onPress={()=>{setStatusClone(item.name)}}
+          style={{margin: 10, flexDirection: 'row', marginLeft: 20}}>
+          <Icon name="check" size={20} color={COLOR.GREEN} />
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '500',
+              color: COLOR.GREEN,
+              marginLeft: 10,
+            }}>
+            {item.name}
+          </Text>
+        </TouchableOpacity>}
+        </View>
+      );
+    };
+    return (
+      <View style={{flex: 1}}>
+        <FlatList
+          data={data}
+          renderItem={renderItem}
+          keyExtractor={item => `${item.id}`}
+        />
+      </View>
+    );
+  };
+
+  const renderModal = () => {
+    return (
+      <MyModal
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(false);
+        }}>
+        <View
+          style={{
+            height: 260,
+            width: 250,
+            backgroundColor: COLOR.WHITE,
+            borderRadius: 14,
+            shadowColor: '#000',
+              shadowOffset: {
+                width: 0,
+                height: 2,
+              },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+
+             elevation: 7,
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              margin: 5,
+              marginRight: 10,
+            }}>
+            <Text
+              style={{
+                fontSize: 19,
+                fontWeight: '500',
+                fontStyle: 'italic',
+                color: COLOR.BLACK,
+              }}>
+              Trạng thái đơn hàng
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setModalVisible(false);
+                setStatusClone(statusSelected)
+              }}
+              style={{}}>
+              <Icon name="times" size={30} color={COLOR.BLACK} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={{flex: 1}}>
+            {/* <TouchableOpacity
+              style={{margin: 10, flexDirection: 'row', marginLeft: 20}}>
+              <Icon name="check" size={20} color={COLOR.BLACK} />
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '500',
+                  color: COLOR.BLACK,
+                  marginLeft: 10,
+                }}>
+                Chờ lấy
+              </Text>
+            </TouchableOpacity> */}
+            {statusClone && renderListStatusToChange(listStatus)}
+          </View>
+
+          <TouchableOpacity
+            onPress={handleConfirmChangeStatus}
+            style={{
+              margin: 10,
+              height: 40,
+              width: 100,
+              backgroundColor: COLOR.MAIN,
+              borderRadius: 10,
+              alignSelf: 'center',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Text style={{fontSize: 18, fontWeight: '500', color: COLOR.BLACK}}>
+              Xác nhận
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </MyModal>
+    );
+  };
+
+  if (order && user && store) {
     return (
       <View style={styles.container}>
+        {renderModal()}
         {renderHeader()}
-        <ScrollView>{renderContentOrder(data)}</ScrollView>
-        {userCurrent.role == 'shiper' && !data.shipperId && (
+        <ScrollView>{renderContentOrder(order)}</ScrollView>
+        {userCurrent.role == 'shiper' && !order.shipperId && (
           <View
             style={{
               height: 80,

@@ -29,12 +29,15 @@ export const createProduct = async ({
   idStore,
   price,
   image,
+  discount
 }) => {
   var data = JSON.stringify({
     name,
     description,
     idStore,
     price,
+    image,
+    discount
   });
 
   var config = {

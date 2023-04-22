@@ -9,6 +9,7 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CheckboxList from 'rn-checkbox-list';
@@ -31,8 +32,8 @@ export const DetailItem = ({route, navigation}) => {
     let {data} = route.params;
     let {store} = route.params;
     setData(data);
-    setPrice(data.price);
-    setStoreOrder(store)
+    setPrice(data.price - (data.price / 100) * data.discount);
+    setStoreOrder(store);
     console.log('data', data);
     console.log('store========', store);
   }, [data]);
@@ -46,6 +47,23 @@ export const DetailItem = ({route, navigation}) => {
     AsyncStorage.setItem('cart', JSON.stringify(cart));
     console.log('cart', cart);
   }, [cart]);
+
+  function currencyFormat(num) {
+    return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+  }
+
+  function containsObject(obj, list) {
+    var i;
+    for (i = 0; i < list.length; i++) {
+        if (list[i]._id === obj._id) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
   function renderDetailItem(data) {
     return (
       <View>
@@ -74,10 +92,66 @@ export const DetailItem = ({route, navigation}) => {
             </Text>
           </View>
           <View style={{flex: 1, justifyContent: 'center'}}>
-            <Text style={{color: COLOR.BLACK, fontSize: 24, fontWeight: '700'}}>
+            {/* <Text style={{color: COLOR.BLACK, fontSize: 24, fontWeight: '700'}}>
               {data.price}
             </Text>
-            <Text style={{color: COLOR.lightGray, fontSize: 18}}>Giá gốc</Text>
+            <Text style={{color: COLOR.lightGray, fontSize: 18}}>Giá gốc</Text> */}
+              {data.discount == 0 && (
+              <View style={{flexDirection: 'row',alignItems:'center'}}>
+                <Text
+                  style={{
+                    color: COLOR.BLACK,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 20,
+                    //alignSelf:'flex-start'
+                  }}>
+                  Giá:{' '}
+                </Text>
+                <Text
+                  style={{
+                    color: COLOR.RED,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 17,
+                  }}>
+                  {currencyFormat(data.price)} ₫
+                </Text>
+              </View>
+            )}
+            {data.discount !== 0 && (
+              <View style={{flexDirection: 'row'}}>
+                <Text
+                  style={{
+                    color: COLOR.BLACK,
+                    flexWrap: 'wrap-reverse',
+                    fontSize: 20,
+                  }}>
+                  Giá:{' '}
+                </Text>
+                <View>
+                  <Text
+                    style={{
+                      color: COLOR.lightGray,
+                      flexWrap: 'wrap-reverse',
+                      fontSize: 17,
+                      textDecorationLine: 'line-through',
+                      textDecorationStyle: 'solid',
+                    }}>
+                    {currencyFormat(data.price)} ₫
+                  </Text>
+                  <Text
+                    style={{
+                      color: COLOR.RED,
+                      flexWrap: 'wrap-reverse',
+                      fontSize: 17,
+                    }}>
+                    {currencyFormat(
+                      data.price - (data.price / 100) * data.discount,
+                    )}{' '}
+                    ₫
+                  </Text>
+                </View>
+              </View>
+            )}
           </View>
         </View>
         <View style={styles.descriptionContainer}>
@@ -127,11 +201,11 @@ export const DetailItem = ({route, navigation}) => {
 
   const plus = () => {
     setQuantity(quantity + 1);
-  }
+  };
 
-  const minus = () =>{
+  const minus = () => {
     setQuantity(quantity - 1);
-  }
+  };
   function render() {
     return (
       <View style={styles.renderContainer}>
@@ -147,8 +221,7 @@ export const DetailItem = ({route, navigation}) => {
           </Text>
           <Text>Không bắt buộc</Text>
         </View>
-        <TouchableOpacity 
-        style={styles.btnNotification}>
+        <TouchableOpacity style={styles.btnNotification}>
           <Text>Tùy thuộc vào khả năng của quán</Text>
         </TouchableOpacity>
         <View
@@ -161,15 +234,11 @@ export const DetailItem = ({route, navigation}) => {
           <TouchableOpacity
             style={styles.btnContainer}
             onPress={minus}
-            disabled={quantity <= 1}
-            >
-              
+            disabled={quantity <= 1}>
             <Icon name="minus" size={20} color={COLOR.SAPPHIRE} />
           </TouchableOpacity>
           <Text style={{marginHorizontal: 20}}>{quantity}</Text>
-          <TouchableOpacity
-            style={styles.btnContainer}
-            onPress={ plus}>
+          <TouchableOpacity style={styles.btnContainer} onPress={plus}>
             <Icon name="plus" size={20} color={COLOR.SAPPHIRE} />
           </TouchableOpacity>
         </View>
@@ -177,12 +246,23 @@ export const DetailItem = ({route, navigation}) => {
     );
   }
 
-  const addToCart = () => {
+  const addToCart = async () => {
     const newCart = [...cart];
-    const newData = {...data,quantity,total:price*quantity + totalPriceOption*quantity}
-    newCart.push(newData);
-    console.log('addtoCart');
-    setCart(newCart);
+   if(data){
+    if (containsObject(data,newCart)) {
+      Alert.alert('Mặt hàng này đã có trong giỏ hàng');
+    } else {
+     
+      const newData = {
+        ...data,
+        quantity,
+        total: price * quantity + totalPriceOption * quantity,
+      };
+      newCart.push(newData);
+      console.log('addtoCart');
+      setCart(newCart);
+    }
+   }
   };
   if (data) {
     return (
@@ -213,12 +293,14 @@ export const DetailItem = ({route, navigation}) => {
           <TouchableOpacity
             onPress={async () => {
               console.log('add');
-              addToCart();
-             AsyncStorage.setItem('storeOrder', JSON.stringify(storeOrder));
-              navigation.navigate('Cart')
+              await addToCart().then(() =>{
+                AsyncStorage.setItem('storeOrder', JSON.stringify(storeOrder));
+              navigation.goBack();
+              })
+              
             }}>
             <Text style={{fontSize: 18, fontWeight: '600'}}>
-              Thêm vào giỏ hàng - {price*quantity + totalPriceOption}
+              Thêm vào giỏ hàng - {price * quantity + totalPriceOption}
             </Text>
           </TouchableOpacity>
         </View>

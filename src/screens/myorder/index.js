@@ -40,7 +40,6 @@ export function MyOrder({navigation}) {
       fetchData();
     }
   }, [user]);
-
   useEffect(() => {
    setOrderWithStatus(orders.filter(checkStatus1))
   function checkStatus1(item) {
@@ -48,6 +47,9 @@ export function MyOrder({navigation}) {
   }
   },[status,orders])
 
+  function currencyFormat(num) {
+    return  num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
+ }
   // const choXacNhanStatus = orders.filter(checkStatus1);
   // function checkStatus1(item) {
   //   return item.status == 'Chờ xác nhận';
@@ -243,7 +245,7 @@ export function MyOrder({navigation}) {
               justifyContent: 'center',
             }}>
             <Text style={FONTS.nameItem}>{item.name}</Text>
-            <Text style={FONTS.nameItem}>{item.totalPrice} ₫</Text>
+            <Text style={FONTS.nameItem}>{currencyFormat(item.totalPrice)} ₫</Text>
           </View>
         </TouchableOpacity>
       );
