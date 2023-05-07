@@ -29,7 +29,7 @@ export const createProduct = async ({
   idStore,
   price,
   image,
-  discount
+  discount,
 }) => {
   var data = JSON.stringify({
     name,
@@ -37,7 +37,7 @@ export const createProduct = async ({
     idStore,
     price,
     image,
-    discount
+    discount,
   });
 
   var config = {
@@ -57,3 +57,57 @@ export const createProduct = async ({
       console.log(error);
     });
 };
+
+export const updateProduct = async ({
+  id,
+  name,
+  description,
+  price,
+  image,
+  discount,
+}) => {
+  let data = JSON.stringify({
+    id,
+    name,
+    description,
+    price,
+    image,
+    discount,
+  });
+
+  let config = {
+    method: 'put',
+    maxBodyLength: Infinity,
+    url: `http://${ip}:3005/api/v1/products/updateProduct/${id}`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: data,
+  };
+
+  axios
+    .request(config)
+    .then(response => {
+      console.log(JSON.stringify(response.data));
+    })
+    .catch(error => {
+      console.log(error);
+    });
+};
+
+export const deleteProduct = async ({id}) =>{
+  let config = {
+    method: 'delete',
+    maxBodyLength: Infinity,
+    url: `http://${ip}:3005/api/v1/products/deleteProduct/${id}`,
+    headers: { }
+  };
+  
+  axios.request(config)
+  .then((response) => {
+    console.log(JSON.stringify(response.data));
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+}

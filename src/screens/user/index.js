@@ -78,7 +78,7 @@ export function User({navigation}) {
           <View style={{flex: 4, flexDirection: 'row', alignItems: 'center'}}>
             <Image
               source={{
-                uri: userInfor.avatar,
+                uri: user.avatar,
               }}
               resizeMode="cover"
               style={{

@@ -2,7 +2,8 @@ import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Login, ChangePassword, Register, ConfirmAccount, ForgotPassword,Home,OrderDetail,ShiperTabs,AddressPicker,SearchStore,
-    Tabs,Account,DetailStore,DetailItem,MyStoreInfomation,CreateProduct,Order,Cart,MyOrder,FavoriteStore,GetLocation1 } from '../screens';
+    Tabs,Account,DetailStore,DetailItem,MyStoreInfomation,CreateProduct,Order,Cart,MyOrder,FavoriteStore,
+    GetLocation1,AdminTabs,ManagerAccountDetail,ManageStoreDetail,CreateShipper,UpdateProduct } from '../screens';
 const Stack = createNativeStackNavigator();
 
 export function Navigation() {
@@ -30,6 +31,11 @@ export function Navigation() {
                 <Stack.Screen name="GetLocation" component={GetLocation1} />
                 <Stack.Screen name="AddressPicker" component={AddressPicker} />
                 <Stack.Screen name="SearchStore" component={SearchStore} />
+                <Stack.Screen name="AdminTabs" component={AdminTabs} />
+                <Stack.Screen name="ManagerAccountDetail" component={ManagerAccountDetail} />
+                <Stack.Screen name="ManageStoreDetail" component={ManageStoreDetail} />
+                <Stack.Screen name="CreateShipper" component={CreateShipper} />
+                <Stack.Screen name="UpdateProduct" component={UpdateProduct} />
             </Stack.Navigator>
         </NavigationContainer>
     )

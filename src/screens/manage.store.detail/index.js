@@ -8,7 +8,6 @@ import {
   Dimensions,
   ImageBackground,
   TouchableOpacity,
-  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -18,13 +17,11 @@ const {width, height} = Dimensions.get('window');
 import {myStore, dataDetail} from '../../data/data';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {Button} from '../../components';
-import {MyModal} from '../../components';
 import {ScrollView} from 'react-native-gesture-handler';
 import {
-  findStoreByUserId,
+  deleteStore,
   findProductByIdStore,
   getOrderByStoreId,
-  deleteProduct,
 } from '../../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -35,7 +32,7 @@ import {
   ContributionGraph,
   StackedBarChart,
 } from 'react-native-chart-kit';
-export function MyStore({navigation}) {
+export function ManageStoreDetail({navigation,route}) {
   const [productInMyStore, setProductInMyStore] = useState('1');
   const [tab, setTab] = useState(1);
   const [subTab, setSubTab] = useState(1);
@@ -44,50 +41,17 @@ export function MyStore({navigation}) {
   const [product, setProduct] = useState(null);
   const [orders, setOrders] = useState([]);
   const [status, setStatus] = useState('Chờ xác nhận');
-  const [modalVisible, setModalVisible] = useState(false);
   const [orderWithStatus, setOrderWithStatus] = useState(null);
-  const [ordersWithMonth1, setOrdersWithMonth1] = useState([]);
-  const [ordersWithMonth2, setOrdersWithMonth2] = useState([]);
-  const [ordersWithMonth3, setOrdersWithMonth3] = useState([]);
-  const [ordersWithMonth4, setOrdersWithMonth4] = useState([]);
-  const [ordersWithMonth5, setOrdersWithMonth5] = useState([]);
-  const [ordersWithMonth6, setOrdersWithMonth6] = useState([]);
-  const [ordersWithMonth7, setOrdersWithMonth7] = useState([]);
-  const [ordersWithMonth8, setOrdersWithMonth8] = useState([]);
-  const [ordersWithMonth9, setOrdersWithMonth9] = useState([]);
-  const [ordersWithMonth10, setOrdersWithMonth10] = useState([]);
-  const [ordersWithMonth11, setOrdersWithMonth11] = useState([]);
-  const [ordersWithMonth12, setOrdersWithMonth12] = useState([]);
-  const [itemSelected, setItemSelected] = useState(null);
-  function countTotal(accumulator, current) {
-    return accumulator + current.totalPrice - current.shippingfee;
-  }
-
-  let totalPrice1 = ordersWithMonth1.reduce(countTotal, 0);
-  let totalPrice2 = ordersWithMonth2.reduce(countTotal, 0);
-  let totalPrice3 = ordersWithMonth3.reduce(countTotal, 0);
-  let totalPrice4 = ordersWithMonth4.reduce(countTotal, 0);
-  let totalPrice5 = ordersWithMonth5.reduce(countTotal, 0);
-  let totalPrice6 = ordersWithMonth6.reduce(countTotal, 0);
-  let totalPrice7 = ordersWithMonth7.reduce(countTotal, 0);
-  let totalPrice8 = ordersWithMonth8.reduce(countTotal, 0);
-  let totalPrice9 = ordersWithMonth9.reduce(countTotal, 0);
-  let totalPrice10 = ordersWithMonth10.reduce(countTotal, 0);
-  let totalPrice11 = ordersWithMonth11.reduce(countTotal, 0);
-  let totalPrice12 = ordersWithMonth12.reduce(countTotal, 0);
 
   const handleCreateStore = () => {
     navigation.navigate('MyStoreInfomation');
   };
-
-  const handleDeleteProduct = async () => {
-
-    const id = itemSelected._id;
-    await deleteProduct({id}).then(() => {
-      setModalVisible(false);
-    });
-  };
-
+  const handleDeleteStore = async () => {
+    const storeId = store._id
+    await deleteStore({storeId}).then(() => {
+        navigation.goBack();
+    })
+  }
   useEffect(() => {
     AsyncStorage.getItem('user').then(result => {
       console.log(result);
@@ -96,15 +60,10 @@ export function MyStore({navigation}) {
   }, []);
 
   useEffect(() => {
-    if (user) {
-      const userId = user._id;
-      const fetchData = async () => {
-        const pr = await findStoreByUserId({userId});
-        setStore(pr);
-      };
-      fetchData();
-    }
-  }, [user]);
+    let {data} = route.params;
+    setStore(data);
+   
+  }, [data]);
 
   useEffect(() => {
     if (store) {
@@ -117,7 +76,7 @@ export function MyStore({navigation}) {
       };
       fetchData();
     }
-  }, [store]);
+  }, [store, tab]);
 
   useEffect(() => {
     setOrderWithStatus(orders.filter(checkStatus1));
@@ -126,104 +85,13 @@ export function MyStore({navigation}) {
     }
   }, [status, orders]);
 
-  useEffect(() => {
-    setOrdersWithMonth1(orders.filter(checkMonth1));
-    function checkMonth1(item) {
-      return moment(item.created_date).format('MM-YYYY') == '01-2023';
-    }
-
-    setOrdersWithMonth2(orders.filter(checkMonth2));
-    function checkMonth2(item) {
-      return moment(item.created_date).format('MM-YYYY') == '02-2023';
-    }
-
-    setOrdersWithMonth3(orders.filter(checkMonth3));
-    function checkMonth3(item) {
-      return moment(item.created_date).format('MM-YYYY') == '03-2023';
-    }
-
-    setOrdersWithMonth4(orders.filter(checkMonth4));
-    function checkMonth4(item) {
-      return moment(item.created_date).format('MM-YYYY') == '04-2023';
-    }
-
-    setOrdersWithMonth5(orders.filter(checkMonth5));
-    function checkMonth5(item) {
-      return moment(item.created_date).format('MM-YYYY') == '05-2023';
-    }
-
-    setOrdersWithMonth6(orders.filter(checkMonth6));
-    function checkMonth6(item) {
-      return moment(item.created_date).format('MM-YYYY') == '06-2023';
-    }
-
-    setOrdersWithMonth7(orders.filter(checkMonth7));
-    function checkMonth7(item) {
-      return moment(item.created_date).format('MM-YYYY') == '07-2023';
-    }
-
-    setOrdersWithMonth8(orders.filter(checkMonth8));
-    function checkMonth8(item) {
-      return moment(item.created_date).format('MM-YYYY') == '08-2023';
-    }
-
-    setOrdersWithMonth9(orders.filter(checkMonth9));
-    function checkMonth9(item) {
-      return moment(item.created_date).format('MM-YYYY') == '09-2023';
-    }
-
-    setOrdersWithMonth10(orders.filter(checkMonth10));
-    function checkMonth10(item) {
-      return moment(item.created_date).format('MM-YYYY') == '10-2023';
-    }
-
-    setOrdersWithMonth11(orders.filter(checkMonth11));
-    function checkMonth11(item) {
-      return moment(item.created_date).format('MM-YYYY') == '11-2023';
-    }
-
-    setOrdersWithMonth12(orders.filter(checkMonth12));
-    function checkMonth12(item) {
-      return moment(item.created_date).format('MM-YYYY') == '12-2023';
-    }
-  }, [status, orders]);
-
   function currencyFormat(num) {
     return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
   }
-  if (orders) {
-    const month = orders.map(item =>
-      moment(item.created_date).format('MM-YYYY'),
-    );
-    // console.log('Month========', month);
-  }
+ 
   // console.log('Store ==========>', store);
   // console.log('product ==========>', product);
   // console.log('orders ==========>', orders);
-  // console.log('selectedItem ==========>', itemSelected.name);
-
-  const [refreshing, setRefreshing] = useState(false);
-  const loadData = async () => {
-    // Tải thêm dữ liệu từ server
-    // Sau đó cập nhật state `data` với dữ liệu mới
-
-    if (store) {
-      const storeId = store._id;
-      const fetchData = async () => {
-        const pr = await findProductByIdStore({storeId});
-        const orders = await getOrderByStoreId({storeId});
-        setProduct(pr);
-        setOrders(orders);
-      };
-      fetchData();
-    }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  };
 
   const renderHeader = () => {
     return (
@@ -286,6 +154,7 @@ export function MyStore({navigation}) {
             </View>
           </View>
           <TouchableOpacity
+          onPress={handleDeleteStore}
             style={{
               borderWidth: 1,
               borderColor: COLOR.WHITE,
@@ -293,7 +162,7 @@ export function MyStore({navigation}) {
               paddingVertical: 5,
               justifyContent: 'flex-end',
             }}>
-            <Text style={{color: COLOR.WHITE, fontSize: 20}}>Sửa</Text>
+            <Text style={{color: COLOR.RED, fontSize: 20}}>Xóa</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>
@@ -307,7 +176,7 @@ export function MyStore({navigation}) {
             setTab(1);
           }}
           style={{
-            width: width * 0.33,
+            width: width * 0.5,
             justifyContent: 'center',
             alignItems: 'center',
             borderBottomColor: tab == 1 ? COLOR.ORGANGE : COLOR.lightGray4,
@@ -327,7 +196,7 @@ export function MyStore({navigation}) {
             setTab(2);
           }}
           style={{
-            width: width * 0.33,
+            width: width * 0.5,
             justifyContent: 'center',
             alignItems: 'center',
             borderBottomColor: tab == 2 ? COLOR.ORGANGE : COLOR.lightGray4,
@@ -342,26 +211,7 @@ export function MyStore({navigation}) {
             Đơn đặt hàng
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => {
-            setTab(3);
-          }}
-          style={{
-            width: width * 0.33,
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderBottomColor: tab == 3 ? COLOR.ORGANGE : COLOR.lightGray4,
-            borderBottomWidth: tab == 3 ? 1 : 0.8,
-          }}>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '500',
-              color: tab == 3 ? COLOR.ORGANGE : COLOR.BLACK,
-            }}>
-            Thống kê
-          </Text>
-        </TouchableOpacity>
+   
       </View>
     );
   };
@@ -381,10 +231,12 @@ export function MyStore({navigation}) {
             height: 150,
             alignItems: 'center',
           }}
-          onPress={() => {
-            setModalVisible(true);
-            setItemSelected(item);
-          }}>
+          // onPress={() =>
+          //   navigation.navigate('DetailItem', {
+          //     data: item,
+          //   })
+          // }
+          >
           {/* Book Cover */}
           <Image
             source={{
@@ -679,366 +531,27 @@ export function MyStore({navigation}) {
     );
   };
 
-  const renderStatistical = () => {
-    if (product) {
-      const nameProduct = product.map(item => item.name);
 
-      const sold = product.map(item => item.sold);
-      const chartConfig = {
-        backgroundColor: '#e26a00',
-        backgroundGradientFrom: '#fb8c00',
-        backgroundGradientTo: '#ffa726',
-        decimalPlaces: 2, // optional, defaults to 2dp
-        color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-        labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-        style: {
-          borderRadius: 16,
-        },
-        propsForDots: {
-          r: '6',
-          strokeWidth: '2',
-          stroke: '#ffa726',
-        },
-      };
-
-      const data = {
-        labels: nameProduct,
-        datasets: [
-          {
-            data: sold,
-          },
-        ],
-      };
-      return (
-        <View style={styles.statisticalComponent}>
-          <Text></Text>
-          <LineChart
-            data={data}
-            width={width - 20} // from react-native
-            height={450}
-            yAxisInterval={1} // optional, defaults to 1
-            fromZero={true}
-            verticalLabelRotation={45}
-            chartConfig={chartConfig}
-            style={{
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
-          />
-        </View>
-      );
-    } else {
-      return <></>;
-    }
-  };
-
-  const renderBarChart = () => {
-    if (product) {
-      const nameProduct = product.map(item => item.name);
-
-      const sold = product.map(item => item.sold);
-      const data = {
-        labels: nameProduct,
-        datasets: [
-          {
-            data: sold,
-          },
-        ],
-      };
-      const chartConfig = {
-        backgroundColor: '#e26a00',
-        backgroundGradientFrom: '#fb8c00',
-        backgroundGradientTo: '#ffa726',
-        decimalPlaces: 0, // optional, defaults to 2dp
-        color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-        labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-        style: {
-          borderRadius: 16,
-        },
-        propsForDots: {
-          r: '6',
-          strokeWidth: '2',
-          stroke: '#ffa726',
-        },
-      };
-      return (
-        <View style={styles.barChar}>
-          <BarChart
-            style={{marginVertical: 8, borderRadius: 16}}
-            data={data}
-            width={500} // from react-native
-            height={500}
-            yAxisInterval={1} // optional, defaults to 1
-            fromZero={true}
-            chartConfig={chartConfig}
-            verticalLabelRotation={90}
-            showValuesOnTopOfBars={true}
-            xLabelsOffset={-10}
-          />
-        </View>
-      );
-    }
-  };
-
-  const renderBarChart2 = () => {
-    const data = {
-      labels: [
-        '01-2023',
-        '02-2023',
-        '03-2023',
-        '04-2023',
-        '05-2023',
-        '06-2023',
-        '07-2023',
-        '08-2023',
-        '09-2023',
-        '10-2023',
-        '11-2023',
-        '12-2023',
-      ],
-      datasets: [
-        {
-          data: [
-            ordersWithMonth1.length,
-            ordersWithMonth2.length,
-            ordersWithMonth3.length,
-            ordersWithMonth4.length,
-            ordersWithMonth5.length,
-            ordersWithMonth6.length,
-            ordersWithMonth7.length,
-            ordersWithMonth8.length,
-            ordersWithMonth9.length,
-            ordersWithMonth10.length,
-            ordersWithMonth11.length,
-            ordersWithMonth12.length,
-          ],
-        },
-      ],
-    };
-    const chartConfig = {
-      backgroundColor: '#e26a00',
-      backgroundGradientFrom: '#fb8c00',
-      backgroundGradientTo: '#ffa726',
-      decimalPlaces: 0, // optional, defaults to 2dp
-      color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-      style: {
-        borderRadius: 16,
-      },
-      propsForDots: {
-        r: '6',
-        strokeWidth: '2',
-        stroke: '#ffa726',
-      },
-    };
-    return (
-      <View style={styles.barChar}>
-        <BarChart
-          style={{marginVertical: 8, borderRadius: 16}}
-          data={data}
-          width={600} // from react-native
-          height={500}
-          yAxisInterval={1} // optional, defaults to 1
-          fromZero={true}
-          chartConfig={chartConfig}
-          verticalLabelRotation={90}
-          showValuesOnTopOfBars={true}
-          xLabelsOffset={-10}
-        />
-      </View>
-    );
-  };
-
-  const renderBarChart3 = () => {
-    const data = {
-      labels: [
-        '01-2023',
-        '02-2023',
-        '03-2023',
-        '04-2023',
-        '05-2023',
-        '06-2023',
-        '07-2023',
-        '08-2023',
-        '09-2023',
-        '10-2023',
-        '11-2023',
-        '12-2023',
-      ],
-      datasets: [
-        {
-          data: [
-            totalPrice1,
-            totalPrice2,
-            totalPrice3,
-            totalPrice4,
-            totalPrice5,
-            totalPrice6,
-            totalPrice7,
-            totalPrice8,
-            totalPrice9,
-            totalPrice10,
-            totalPrice11,
-            totalPrice12,
-          ],
-        },
-      ],
-    };
-    const chartConfig = {
-      backgroundColor: '#e26a00',
-      backgroundGradientFrom: '#fb8c00',
-      backgroundGradientTo: '#ffa726',
-      decimalPlaces: 0, // optional, defaults to 2dp
-      color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-      style: {
-        borderRadius: 16,
-      },
-      propsForDots: {
-        r: '6',
-        strokeWidth: '2',
-        stroke: '#ffa726',
-      },
-    };
-    return (
-      <View style={styles.barChar}>
-        <BarChart
-          style={{marginVertical: 8, borderRadius: 16}}
-          data={data}
-          width={600} // from react-native
-          height={500}
-          yAxisInterval={1} // optional, defaults to 1
-          fromZero={true}
-          chartConfig={chartConfig}
-          verticalLabelRotation={90}
-          showValuesOnTopOfBars={true}
-          xLabelsOffset={-10}
-        />
-      </View>
-    );
-  };
-
-  const renderModal = () => {
-    return (
-      <MyModal
-        visible={modalVisible}
-        onRequestClose={() => {
-          setModalVisible(false);
-        }}>
-        <View
-          style={{
-            height: 120,
-            width: 220,
-            backgroundColor: COLOR.WHITE,
-            borderRadius: 14,
-            shadowColor: '#000',
-            shadowOffset: {
-              width: 0,
-              height: 2,
-            },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-
-            elevation: 7,
-          }}>
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              margin: 5,
-              marginRight: 10,
-            }}>
-            <Text
-              style={{
-                fontSize: 19,
-                fontWeight: '500',
-                fontStyle: 'italic',
-                color: COLOR.BLACK,
-              }}></Text>
-            <TouchableOpacity
-              onPress={() => {
-                setModalVisible(false);
-              }}
-              style={{}}>
-              <FontAwesome5 name="times" size={30} color={COLOR.BLACK} />
-            </TouchableOpacity>
-          </View>
-          <View
-            style={{
-              flex: 1,
-              flexDirection: 'row',
-              justifyContent: 'space-around',
-              marginTop: 10,
-            }}>
-            <TouchableOpacity
-              style={styles.btnCancel}
-              onPress={() =>
-                navigation.navigate('UpdateProduct', {data: itemSelected})
-              }>
-              <Text style={styles.txtInBtn}>Sửa</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleDeleteProduct}
-              style={styles.btnPost}>
-              <Text style={styles.txtInBtn}>Xóa</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </MyModal>
-    );
-  };
 
   if (store) {
     return (
       <View style={styles.container}>
-        {renderModal()}
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }>
-          <View>{renderHeader()}</View>
-          <View>{rendertabs()}</View>
-          {tab == 1 && (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              {renderMyFoodsectionIntoColumn(product)}
-            </ScrollView>
-          )}
-          {tab == 2 && (
-            <ScrollView>
-              <View style={{height: 50}}>{renderOrderStatus()}</View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {renderListOrder(orderWithStatus)}
-              </ScrollView>
-            </ScrollView>
-          )}
-          {tab == 3 && (
-            <ScrollView>
-              <Text style={styles.title}>
-                Số lượng bán được theo từng sản phẩm
-              </Text>
-              <ScrollView horizontal>{renderBarChart()}</ScrollView>
-              <Text style={styles.title}>
-                Số lượng đơn đặt hàng theo từng tháng
-              </Text>
-              <ScrollView horizontal>{renderBarChart2()}</ScrollView>
-              <Text style={styles.title}>Doanh thu theo từng tháng</Text>
-              <ScrollView horizontal>{renderBarChart3()}</ScrollView>
-            </ScrollView>
-          )}
-        </ScrollView>
+        <View>{renderHeader()}</View>
+        <View>{rendertabs()}</View>
         {tab == 1 && (
-          <TouchableOpacity
-            onPress={() => {
-              navigation.navigate('CreateProduct', {store: store});
-            }}>
-            <Ionicons
-              name="add-circle-outline"
-              size={50}
-              style={styles.iconAdd}
-              color={COLOR.BLACK}
-            />
-          </TouchableOpacity>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {renderMyFoodsectionIntoColumn(product)}
+          </ScrollView>
         )}
+        {tab == 2 && (
+          <ScrollView>
+            <View style={{height: 50}}>{renderOrderStatus()}</View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {renderListOrder(orderWithStatus)}
+            </ScrollView>
+          </ScrollView>
+        )}
+       
       </View>
     );
   } else {
@@ -1106,32 +619,5 @@ const styles = StyleSheet.create({
   barChar: {
     flex: 1,
     paddingHorizontal: 10,
-  },
-  title: {
-    fontSize: 22,
-    marginLeft: 15,
-    marginTop: 10,
-    color: COLOR.BLACK,
-    fontWeight: '700',
-  },
-  btnCancel: {
-    backgroundColor: COLOR.ORGANGE,
-    height: 45,
-    width: 70,
-    borderRadius: 10,
-    justifyContent: 'center',
-  },
-  btnPost: {
-    backgroundColor: COLOR.RED,
-    height: 45,
-    width: 70,
-    borderRadius: 10,
-    justifyContent: 'center',
-  },
-  txtInBtn: {
-    color: COLOR.WHITE,
-    fontSize: 18,
-    fontWeight: '700',
-    alignSelf: 'center',
   },
 });

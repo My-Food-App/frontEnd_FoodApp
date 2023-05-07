@@ -42,7 +42,7 @@ export const createStore = async ({
     email,
     phone,
     address,
-    image
+    image,
   });
 
   var config = {
@@ -63,9 +63,44 @@ export const createStore = async ({
     });
 };
 
-export const getStoreById = async ({storeId}) =>{
-
-  data = await (await axios.get(`http://${ip}:3005/api/v1/stores/${storeId}`)).data;
+export const getStoreById = async ({storeId}) => {
+  data = await (
+    await axios.get(`http://${ip}:3005/api/v1/stores/${storeId}`)
+  ).data;
   return data;
+};
+export const searchStoreByName = async ({searchValue}) => {
+  var data = JSON.stringify({
+    keyWord: searchValue,
+  });
 
+  var config = {
+    method: 'post',
+    url: `http://${ip}:3005/api/v1/stores/findByName`,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: data,
+  };
+
+  value = (await axios(config)).data;
+  return value;
+};
+
+export const deleteStore = async ({storeId}) => {
+  let config = {
+    method: 'delete',
+    maxBodyLength: Infinity,
+    url: `http://${ip}:3005/api/v1/stores/deleteStore/${storeId}`,
+    headers: { }
+  };
+  
+  axios.request(config)
+  .then((response) => {
+    console.log(JSON.stringify(response.data));
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+  
 }

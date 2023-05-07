@@ -24,11 +24,11 @@ export const login = async ({username, password,navigation}) => {
         if(response.data.data.role=="user"){
           navigation.navigate("Tabs")
         }
-        else if(response.data.data.role=="shiper"){
+        else if(response.data.data.role=="shipper"){
           navigation.navigate("ShiperTabs")
         }
         else if(response.data.data.role=="admin"){
-    
+          navigation.navigate("AdminTabs")
         }
       })
    

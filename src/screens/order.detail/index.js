@@ -483,7 +483,7 @@ export function OrderDetail({navigation, route}) {
         {renderModal()}
         {renderHeader()}
         <ScrollView>{renderContentOrder(order)}</ScrollView>
-        {userCurrent.role == 'shiper' && !order.shipperId && (
+        {userCurrent.role == 'shipper' && !order.shipperId && (
           <View
             style={{
               height: 80,
