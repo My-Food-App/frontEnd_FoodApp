@@ -257,7 +257,7 @@ export function Home({route, navigation}) {
               width: 150,
               height: 100,
             }}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            {item.tag && <View style={{flexDirection: 'row', alignItems: 'center'}}>
               <Image
                 source={icons.tag_icon}
                 resizeMode="contain"
@@ -267,8 +267,8 @@ export function Home({route, navigation}) {
                   height: 15,
                 }}
               />
-              <Text style={FONTS.tagNameItem}>Ưu đãi đến 35k</Text>
-            </View>
+              <Text style={FONTS.tagNameItem}>{item.tag}</Text>
+            </View>}
             <View
               style={{
                 flexDirection: 'row',
@@ -369,7 +369,7 @@ export function Home({route, navigation}) {
               height: 100,
               marginLeft: 20,
             }}>
-            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+            {item.tag && <View style={{flexDirection: 'row', alignItems: 'center'}}>
               <Image
                 source={icons.tag_icon}
                 resizeMode="contain"
@@ -379,8 +379,8 @@ export function Home({route, navigation}) {
                   height: 15,
                 }}
               />
-              <Text style={FONTS.tagNameItem}>Ưu đãi đến 35k</Text>
-            </View>
+              <Text style={FONTS.tagNameItem}>{item.tag}</Text>
+            </View>}
             <View
               style={{
                 flexDirection: 'row',

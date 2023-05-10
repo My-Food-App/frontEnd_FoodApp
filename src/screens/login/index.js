@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, Pressable, StyleSheet,Alert } from "react-native";
 import { Input, Button, Title, Description } from "../../components";
 import { Authentication } from "../../layouts";
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 import { COLOR } from "../../constants";
 import { User, Key } from "../../icons";
@@ -28,8 +29,8 @@ export function Login({ navigation }) {
         <Authentication>
             <Title>Chào mừng bạn trở lại</Title>
             <Description>Vui lòng nhập tên người dùng và mật khẩu để tiếp tục!</Description>
-            <Input onChangeText={setUsername} style={{marginTop: 25}} icon={<User/>} placeholder="Username"/>
-            <Input onChangeText={setPassword} style={{marginTop: 10}} icon={<Key/>} secureTextEntry placeholder="Password"/>
+            <Input onChangeText={setUsername} style={{marginTop: 25}} icon={<FontAwesome5 name="user-alt" size={20} color={COLOR.BLACK} />} placeholder="Username"/>
+            <Input onChangeText={setPassword} style={{marginTop: 10}} icon={<FontAwesome5 name="key" size={20} color={COLOR.BLACK} />} secureTextEntry placeholder="Password"/>
             <Button style={{marginTop: 20, marginBottom: 30}} dark onPress={handleLogin}>đăng nhập</Button>
             <View style={styles.containerFooter}>
                 <View>

@@ -14,9 +14,11 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CheckboxList from 'rn-checkbox-list';
 import Icon from 'react-native-vector-icons/FontAwesome5';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {data as listData, dataDetail} from '../../data/data';
 const {width, height} = Dimensions.get('window');
+import {MyModal} from '../../components';
 
 export const DetailItem = ({route, navigation}) => {
   // const [cart, setCart] = useState([{'a':1}]);
@@ -28,6 +30,7 @@ export const DetailItem = ({route, navigation}) => {
   const [totalPriceOption, setTotalPriceOption] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [storeOrder, setStoreOrder] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
   useEffect(() => {
     let {data} = route.params;
     let {store} = route.params;
@@ -264,12 +267,54 @@ export const DetailItem = ({route, navigation}) => {
     }
    }
   };
+
+  const renderModal = () => {
+    return (
+      <MyModal
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(false);
+        }}>
+        <View
+          style={{
+            height: 100,
+            width: 200,
+            backgroundColor: COLOR.WHITE,
+            borderRadius: 14,
+            shadowColor: '#000',
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+
+            elevation: 7,
+          }}>
+         
+          <View
+            style={{
+              flex: 1,
+              marginTop: 10,
+              justifyContent:'space-around',
+              alignItems:'center',
+              flexDirection:'row'
+            }}>
+               <AntDesign name="checkcircleo" size={30} color={COLOR.GREEN3} />
+           <Text style={{color:COLOR.BLACK,fontSize:18,fontWeight:'600'}}>Thêm thành công</Text>
+          </View>
+        </View>
+      </MyModal>
+    );
+  };
+
   if (data) {
     return (
       <View
         style={{
           flex: 1,
         }}>
+          {renderModal()}
         <ScrollView>
           <View style={{backgroundColor: COLOR.WHITE}}>
             {renderDetailItem(data)}
@@ -295,7 +340,12 @@ export const DetailItem = ({route, navigation}) => {
               console.log('add');
               await addToCart().then(() =>{
                 AsyncStorage.setItem('storeOrder', JSON.stringify(storeOrder));
-              navigation.goBack();
+                setModalVisible(true)
+                setTimeout(() => {
+                  setModalVisible(false)
+                  navigation.goBack();
+                }, 1500)
+              //  clearTimeout(timeoutId)
               })
               
             }}>

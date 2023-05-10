@@ -9,13 +9,19 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
+  Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import {MyModal} from '../../components';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
-import {getUserbyId, updateOrderById, getStoreById,getOrderById} from '../../api';
+import {
+  getUserbyId,
+  updateOrderById,
+  getStoreById,
+  getOrderById,
+} from '../../api';
 import moment from 'moment';
 const {width, height} = Dimensions.get('window');
 
@@ -46,18 +52,18 @@ export function OrderDetail({navigation, route}) {
     setStatusSelected(data.status);
   }, [data]);
 
-  useEffect(() =>{
-    if(orderId){
-      const fetchData = async () =>{
-        const pr = await getOrderById({orderId})
-        setOrder(pr)
+  useEffect(() => {
+    if (orderId) {
+      const fetchData = async () => {
+        const pr = await getOrderById({orderId});
+        setOrder(pr);
         setStatusSelected(pr.status);
-      }
-      fetchData()
+      };
+      fetchData();
     }
-  },[modalVisible,orderId])
+  }, [modalVisible, orderId]);
 
-  console.log('orderId =>>>>>', orderId)
+  console.log('orderId =>>>>>', orderId);
 
   useEffect(() => {
     if (data) {
@@ -94,11 +100,11 @@ export function OrderDetail({navigation, route}) {
       navigation.navigate('ShiperTabs');
     }
   };
- useEffect(() => {
-  if(statusSelected){
-    setStatusClone(statusSelected);
-  }
- },[statusSelected])
+  useEffect(() => {
+    if (statusSelected) {
+      setStatusClone(statusSelected);
+    }
+  }, [statusSelected]);
   console.log('User =>=====>', user);
   //console.log('userCurrent =>=====>', userCurrent);
 
@@ -107,13 +113,50 @@ export function OrderDetail({navigation, route}) {
     setModalVisible(true);
   };
   const handleConfirmChangeStatus = () => {
-    const status =  statusClone
+    const status = statusClone;
     updateOrderById({orderId, status});
     setModalVisible(false);
-  }
+  };
+
+
+
+  const handleCancelOrder = () => {
+    Alert.alert('Thông báo', 'Bạn có chắc muốn hủy đơn?', [
+      {
+        text: 'Hủy',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {
+        text: 'Có',
+        onPress: async () => {
+          const status = 'Đã hủy';
+         await updateOrderById({orderId, status}).then(() => navigation.navigate("ShiperTabs"))
+        },
+      },
+    ]);
+  };
+
+  const handleCancelOrderForUser = () => {
+    Alert.alert('Thông báo', 'Bạn có chắc muốn hủy đơn?', [
+      {
+        text: 'Hủy',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {
+        text: 'Có',
+        onPress: async () => {
+          const status = 'Đã hủy';
+         await updateOrderById({orderId, status}).then(() => navigation.navigate("MyOrder"))
+        },
+      },
+    ]);
+  };
+
   function currencyFormat(num) {
-    return  num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
- }
+    return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+  }
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -147,7 +190,9 @@ export function OrderDetail({navigation, route}) {
               {item.name}
             </Text>
           </View>
-          <Text style={[styles.txtStyle, {fontSize: 16}]}>{currencyFormat(item.total)} ₫</Text>
+          <Text style={[styles.txtStyle, {fontSize: 16}]}>
+            {currencyFormat(item.total)} ₫
+          </Text>
         </TouchableOpacity>
       );
     };
@@ -210,7 +255,8 @@ export function OrderDetail({navigation, route}) {
             </Text>
             <Text style={styles.txtInforUser}>{store.name}</Text>
             <Text style={styles.txtInforUser}>{store.phone}</Text>
-            <Text style={styles.txtInforUser}>{store.address}</Text>
+            {order.receiveAddress && <Text style={styles.txtInforUser}>{order.receiveAddress}</Text>}
+            {!order.receiveAddress && <Text style={styles.txtInforUser}>{store.address}</Text>}
           </View>
         </View>
         <View style={styles.clientInforContainer}>
@@ -227,7 +273,9 @@ export function OrderDetail({navigation, route}) {
             </Text>
             <Text style={styles.txtInforUser}>{user.fullname}</Text>
             <Text style={styles.txtInforUser}>{user.phone}</Text>
-            <Text style={styles.txtInforUser}>{user.address}</Text>
+            
+            {order.deliveryAddress && <Text style={styles.txtInforUser}>{order.deliveryAddress}</Text>}
+            {!order.deliveryAddress && <Text style={styles.txtInforUser}>{user.address}</Text>}
           </View>
         </View>
         <View style={styles.clientInforContainer}>
@@ -334,11 +382,47 @@ export function OrderDetail({navigation, route}) {
                 </Text>
                 <Text
                   style={{fontSize: 16, fontWeight: '400', color: COLOR.BLACK}}>
-                  {moment(data.created_date).format('hh:mm DD-MM-YYYY')}
+                  {moment(data.created_date).format('HH:mm DD-MM-YYYY')}
                 </Text>
               </View>
             </View>
           </View>
+          {data.status === 'Chờ lấy' && data.shipperId == userCurrent._id  && (
+            <TouchableOpacity
+              onPress={handleCancelOrder}
+              style={{
+                backgroundColor: COLOR.ORGANGE,
+                height: 50,
+                width: 130,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: 10,
+                alignSelf: 'center',
+              }}>
+              <Text
+                style={{color: COLOR.BLACK, fontSize: 20, fontWeight: '600'}}>
+                Hủy đơn
+              </Text>
+            </TouchableOpacity>
+          )}
+          {data.status === 'Chờ xác nhận' && data.userId == userCurrent._id && (
+            <TouchableOpacity
+              onPress={handleCancelOrderForUser}
+              style={{
+                backgroundColor: COLOR.ORGANGE,
+                height: 50,
+                width: 130,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: 10,
+                alignSelf: 'center',
+              }}>
+              <Text
+                style={{color: COLOR.BLACK, fontSize: 20, fontWeight: '600'}}>
+                Hủy đơn
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
@@ -348,34 +432,42 @@ export function OrderDetail({navigation, route}) {
     const renderItem = ({item}) => {
       return (
         <View>
-          {statusClone != item.name && <TouchableOpacity
-          onPress={()=>{setStatusClone(item.name)}}
-          style={{margin: 10, flexDirection: 'row', marginLeft: 20}}>
-          <Icon name="check" size={20} color={COLOR.BLACK} />
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '500',
-              color: COLOR.BLACK,
-              marginLeft: 10,
-            }}>
-            {item.name}
-          </Text>
-        </TouchableOpacity>}
-        {statusClone == item.name && <TouchableOpacity
-         onPress={()=>{setStatusClone(item.name)}}
-          style={{margin: 10, flexDirection: 'row', marginLeft: 20}}>
-          <Icon name="check" size={20} color={COLOR.GREEN} />
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '500',
-              color: COLOR.GREEN,
-              marginLeft: 10,
-            }}>
-            {item.name}
-          </Text>
-        </TouchableOpacity>}
+          {statusClone != item.name && (
+            <TouchableOpacity
+              onPress={() => {
+                setStatusClone(item.name);
+              }}
+              style={{margin: 10, flexDirection: 'row', marginLeft: 20}}>
+              <Icon name="check" size={20} color={COLOR.BLACK} />
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '500',
+                  color: COLOR.BLACK,
+                  marginLeft: 10,
+                }}>
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {statusClone == item.name && (
+            <TouchableOpacity
+              onPress={() => {
+                setStatusClone(item.name);
+              }}
+              style={{margin: 10, flexDirection: 'row', marginLeft: 20}}>
+              <Icon name="check" size={20} color={COLOR.GREEN} />
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontWeight: '500',
+                  color: COLOR.GREEN,
+                  marginLeft: 10,
+                }}>
+                {item.name}
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       );
     };
@@ -404,14 +496,14 @@ export function OrderDetail({navigation, route}) {
             backgroundColor: COLOR.WHITE,
             borderRadius: 14,
             shadowColor: '#000',
-              shadowOffset: {
-                width: 0,
-                height: 2,
-              },
-              shadowOpacity: 0.25,
-              shadowRadius: 3.84,
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
 
-             elevation: 7,
+            elevation: 7,
           }}>
           <View
             style={{
@@ -432,7 +524,7 @@ export function OrderDetail({navigation, route}) {
             <TouchableOpacity
               onPress={() => {
                 setModalVisible(false);
-                setStatusClone(statusSelected)
+                setStatusClone(statusSelected);
               }}
               style={{}}>
               <Icon name="times" size={30} color={COLOR.BLACK} />

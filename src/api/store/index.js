@@ -19,6 +19,7 @@ export const findStoreByUserId = async ({userId}) => {
     },
     data: data,
   };
+  console.log("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ")
   value = (await axios(config)).data;
   return value;
 };
@@ -103,4 +104,27 @@ export const deleteStore = async ({storeId}) => {
     console.log(error);
   });
   
+}
+export const updateStore = async ({storeId,name,description,tag,address,email,phone}) => {
+  let data = JSON.stringify({
+    name,description,tag,address,email,phone
+  });
+  
+  let config = {
+    method: 'put',
+    maxBodyLength: Infinity,
+    url: `http://${ip}:3005/api/v1/stores/updateStore/${storeId}`,
+    headers: { 
+      'Content-Type': 'application/json'
+    },
+    data : data
+  };
+  
+  axios.request(config)
+  .then((response) => {
+    console.log(JSON.stringify(response.data));
+  })
+  .catch((error) => {
+    console.log(error);
+  });
 }

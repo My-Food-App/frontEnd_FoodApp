@@ -8,6 +8,10 @@ export const createOrder = async ({
   shippingfee,
   totalPrice,
   navigation,
+  paymentMethod,
+  receiveAddress,
+  deliveryAddress,
+  created_date,
 }) => {
   var data = JSON.stringify({
     userId,
@@ -16,6 +20,10 @@ export const createOrder = async ({
     products,
     shippingfee,
     totalPrice,
+    paymentMethod,
+    receiveAddress,
+    deliveryAddress,
+    created_date,
   });
 
   var config = {
@@ -116,14 +124,11 @@ export const updateOrderById = async ({orderId, status, shipperId}) => {
     .catch(function (error) {
       console.log(error);
     });
-
 };
 
-export const getOrderById = async ({orderId}) =>{
-
-  data = await (await axios.get(`http://${ip}:3005/api/v1/orders/${orderId}`)).data;
+export const getOrderById = async ({orderId}) => {
+  data = await (
+    await axios.get(`http://${ip}:3005/api/v1/orders/${orderId}`)
+  ).data;
   return data;
-
-}
-
-
+};

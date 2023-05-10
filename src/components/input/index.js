@@ -16,11 +16,12 @@ const styles = StyleSheet.create({
     containerInput: {
       position: 'relative',
       width: '100%',
-      zIndex: 1000
+      zIndex: 1000,
+
     },
     icon: {
       position: 'absolute',
-      top: 18,
+      top: 12,
       left: 12,
       zIndex: 1,
     },

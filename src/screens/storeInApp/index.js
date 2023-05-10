@@ -182,7 +182,7 @@ export const DetailStore = ({route, navigation}) => {
                       fontSize: 18,
                       fontWeight: '500',
                     }}>
-                    {space.toFixed(2)} Km ({(space * 7).toFixed(1)} phút)
+                    {space.toFixed(2)} Km ({(space * 5).toFixed(1)} phút)
                   </Text>
                 
               </View>}

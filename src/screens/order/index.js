@@ -9,20 +9,110 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import Fontisto from 'react-native-vector-icons/Fontisto';
+import {Dropdown} from 'react-native-element-dropdown';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import {COLOR, SIZES} from '../../constants';
-import {createOrder, calculateDelivery} from '../../api';
+import {createOrder, calculateDelivery, createPaymentIntent} from '../../api';
+import {useStripe} from '@stripe/stripe-react-native';
 const {width, height} = Dimensions.get('window');
+import {MyModal} from '../../components';
+import {Picker} from '@react-native-picker/picker';
 
 export function Order({navigation}) {
+  const {initPaymentSheet, presentPaymentSheet} = useStripe();
+
   const [cart, setCart] = useState([]);
   const [fee, setFee] = useState(20000);
   const [user, setUser] = useState(null);
   const [store, setStore] = useState(null);
   const [space, setSpace] = useState(0);
+  const [methodPayment, setMethodPayment] = useState(
+    'Thanh toán khi nhận hàng',
+  );
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const dataDiscount = [
+    {label: 'Thanh toán khi nhận hàng', value: 'Thanh toán khi nhận hàng'},
+    {label: 'Thẻ Visa/MasterCard', value: 'Thẻ Visa/MasterCard'},
+  ];
+
+  const [modalAddressVisible, setModalAddressVisible] = useState(false);
+
+  //for address
+
+  const [dataCountries, setDataCountries] = useState([]);
+  const [codeCountries, setCodeCountries] = useState('VN');
+  const [dataCities, setDataCities] = useState([]);
+  const [codeCities, setCodeCities] = useState('');
+  const [dataCounties, setDataCounties] = useState([]);
+  const [codeCounties, setCodeCounties] = useState('');
+  const [dataWards, setDataWards] = useState([]);
+  const [codeWards, setCodeWards] = useState('');
+  const [newAddress, setNewAddress] = useState('');
+  const [numberHouse, setNumberHouse] = useState('');
+
+
+ // for address
+
+ useEffect(() => {
+  fetch(
+    'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/countries.json',
+  ) //eslint-disable-line
+    .then(response => response.json())
+    .then(responseJson => {
+      // this.setState({ dataCountries: Object.values(responseJson) });
+      setDataCountries(responseJson);
+      //  console.log('dataCountries', responseJson);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}, []);
+
+useEffect(() => {
+  fetch(
+    'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/dist/tinh_tp.json',
+  ) //eslint-disable-line
+    .then(response => response.json())
+    .then(responseJson => {
+      setDataCities(Object.values(responseJson));
+      //      console.log('datacity', responseJson);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}, []);
+useEffect(() => {
+  fetch(
+    'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/dist/quan_huyen.json',
+  ) //eslint-disable-line
+    .then(response => response.json())
+    .then(responseJson => {
+      setDataCounties(Object.values(responseJson));
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}, []);
+
+useEffect(() => {
+  fetch(
+    'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/dist/xa_phuong.json',
+  ) //eslint-disable-line
+    .then(response => response.json())
+    .then(responseJson => {
+      setDataWards(Object.values(responseJson));
+    })
+    .catch(error => {
+      console.error(error);
+    });
+}, []);
+
 
   useEffect(() => {
     AsyncStorage.getItem('cart').then(result => {
@@ -64,9 +154,311 @@ export function Order({navigation}) {
   // }
 
   function currencyFormat(num) {
-    return  num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
- }
+    return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+  }
   let total = cart.reduce(countTotal, 0);
+  console.log('total====>', +((total + fee) / 230).toFixed(0));
+  const onCheckout = async () => {
+    // 1. Create a payment intent
+    let amount = +((total + fee) / 230).toFixed(0);
+    const response = await createPaymentIntent({amount});
+    console.log('A==', response);
+    if (response.error) {
+      Alert.alert('Lỗi thanh toán');
+      return;
+    }
+    // 2. Initialize the Payment sheet
+
+    const initResponse = await initPaymentSheet({
+      merchantDisplayName: 'Le Minh Hieu',
+      paymentIntentClientSecret: response.paymentIntent,
+      defaultBillingDetails: {
+        name: 'Jane Doe',
+      },
+    });
+    if (initResponse.error) {
+      Alert.alert('Lỗi thanh toán');
+      return;
+    }
+
+    // 3. Present the Payment Sheet from Stripe
+
+    await presentPaymentSheet();
+
+    // 4. If payment ok -> create the order
+
+    const userId = user._id;
+    const storeId = store._id;
+    const name = store.name;
+    const products = cart;
+    const shippingfee = fee;
+    const totalPrice = total + fee;
+    const paymentMethod = methodPayment;
+    const receiveAddress = store.address;
+    const deliveryAddress = newAddress!== '' ? newAddress : user.address ;
+    const created_date = new Date();
+
+    await createOrder({
+      userId,
+      storeId,
+      name,
+      products,
+      shippingfee,
+      totalPrice,
+      navigation,
+      paymentMethod,
+      receiveAddress,
+      deliveryAddress,
+      created_date,
+    }).then(() => {
+      
+      AsyncStorage.setItem('cart', '[]');
+      setModalVisible(true);
+      setTimeout(() => {
+        setModalVisible(false);
+        navigation.navigate('Tabs');
+      }, 1500);
+      setNewAddress('')
+    });
+  };
+
+  // for  address
+
+  function renderlistCities() {
+    if (dataCities && codeCountries === 'VN') {
+      return dataCities.map((item, key) => (
+        <Picker.Item label={item.name} value={item.code} key={key} />
+      ));
+    }
+    return <Picker.Item label={'Không có dữ liệu'} value={'noData'} />;
+  }
+
+  function renderlistCounties() {
+    if (dataCounties && codeCountries === 'VN') {
+      const filteredDataCounties = dataCounties.filter(item => {
+        return item.parent_code === codeCities;
+      });
+      return filteredDataCounties.map((item, key) => (
+        <Picker.Item label={item.name} value={item.code} key={key} />
+      ));
+    }
+    return <Picker.Item label={'Không có dữ liệu'} value={'noData'} />;
+  }
+
+  function renderlistWards() {
+    if (dataWards && codeCountries === 'VN') {
+      const filteredDataWards = dataWards.filter(item => {
+        return item.parent_code === codeCounties;
+      });
+      return filteredDataWards.map((item, key) => (
+        <Picker.Item label={item.name} value={item.path_with_type} key={key} />
+      ));
+    }
+    return <Picker.Item label={'Không có dữ liệu'} value={'noData'} />;
+  }
+  //
+
+  const renderModalPickAddress = () => {
+    return (
+      <MyModal
+        visible={modalAddressVisible}
+        onRequestClose={() => {
+          setModalAddressVisible(false);
+        }}>
+        <View
+          style={{
+            height: 350,
+            width: 350,
+            backgroundColor: COLOR.WHITE,
+            borderRadius: 14,
+            shadowColor: '#000',
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+
+            elevation: 7,
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              margin: 5,
+              marginRight: 10,
+            }}>
+            <Text
+              style={{
+                fontSize: 19,
+                fontWeight: '500',
+                fontStyle: 'italic',
+                color: COLOR.BLACK,
+              }}>
+              Chọn địa chỉ
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setModalAddressVisible(false);
+                setNewAddress('');
+              }}
+              style={{}}>
+              <Icon name="times" size={30} color={COLOR.BLACK} />
+            </TouchableOpacity>
+          </View>
+
+          <View
+            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Text style={{width: 120, fontSize: 16}}>Tỉnh/Thành Phố</Text>
+              <Picker
+                selectedValue={codeCities}
+                style={{height: 50, width: 200}}
+                onValueChange={(itemValue, itemIndex) => {
+                  setCodeCities(itemValue);
+                }}>
+                {renderlistCities()}
+              </Picker>
+            </View>
+
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Text style={{width: 120, fontSize: 16}}>Quận/Huyện</Text>
+              <Picker
+                selectedValue={codeCounties}
+                style={{height: 50, width: 200}}
+                onValueChange={(itemValue, itemIndex) =>
+                  setCodeCounties(itemValue)
+                }>
+                {renderlistCounties()}
+              </Picker>
+            </View>
+
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Text style={{width: 120, fontSize: 16}}>Phường/Xã</Text>
+              <Picker
+                selectedValue={codeWards}
+                style={{height: 50, width: 200}}
+                onValueChange={(itemValue, itemIndex) =>
+                  setCodeWards(itemValue)
+                }>
+                {renderlistWards()}
+              </Picker>
+            </View>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}>
+              <Text style={{width: 120, fontSize: 16}}>Số nhà</Text>
+              <TextInput
+                placeholder="Số nhà ..."
+                value={numberHouse}
+                onChangeText={setNumberHouse}
+                style={{
+                  width: 200,
+                  borderWidth: 1,
+                  borderRadius: 15,
+                  height: 45,
+                }}></TextInput>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            onPress={() => {
+              setNewAddress(numberHouse + ', ' + codeWards);
+             // handleUpdateAddress();
+             setModalAddressVisible(false)
+            }}
+            style={{
+              margin: 10,
+              height: 40,
+              width: 100,
+              backgroundColor: COLOR.MAIN,
+              borderRadius: 10,
+              alignSelf: 'center',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+            <Text style={{fontSize: 18, fontWeight: '500', color: COLOR.BLACK}}>
+              Xác nhận
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </MyModal>
+    );
+  };
+
+  const DropdownComponent = ({data, setStyle}) => {
+    const [value, setValue] = useState(null);
+    const [isFocus, setIsFocus] = useState(false);
+
+    const renderLabel = () => {
+      if (value || isFocus) {
+        return (
+          <Text
+            style={[
+              styles.label,
+              isFocus && {fontSize: 18, fontWeight: '400', color: COLOR.BLACK},
+            ]}>
+            Chọn
+          </Text>
+        );
+      }
+      return null;
+    };
+
+    return (
+      <View style={styles.container}>
+        {renderLabel()}
+        <Dropdown
+          style={[setStyle, isFocus && {borderColor: 'blue'}]}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          inputSearchStyle={styles.inputSearchStyle}
+          iconStyle={styles.iconStyle}
+          data={data}
+          search
+          maxHeight={300}
+          labelField="label"
+          valueField="value"
+          placeholder={!isFocus ? 'Chọn' : '...'}
+          searchPlaceholder="Search..."
+          value={methodPayment}
+          onFocus={() => setIsFocus(true)}
+          onBlur={() => setIsFocus(false)}
+          onChange={item => {
+            setMethodPayment(item.value);
+            setIsFocus(false);
+          }}
+          renderLeftIcon={() => (
+            <AntDesign
+              style={styles.icon}
+              color={isFocus ? 'blue' : 'black'}
+              name="Safety"
+              size={20}
+            />
+          )}
+        />
+      </View>
+    );
+  };
+
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -99,9 +491,9 @@ export function Order({navigation}) {
               {item.name}
             </Text>
           </View>
-          <Text style={[styles.txtStyle, {fontSize: 16}]}>{currencyFormat(
-                      item.price - (item.price / 100) * item.discount,
-                    )} ₫</Text>
+          <Text style={[styles.txtStyle, {fontSize: 16}]}>
+            {currencyFormat(item.price - (item.price / 100) * item.discount)} ₫
+          </Text>
         </TouchableOpacity>
       );
     };
@@ -133,15 +525,17 @@ export function Order({navigation}) {
                     ]}>
                     Giao hàng
                   </Text>
-                  <Text>Giao hàng ngay (30 phút)</Text>
+                  <Text>Giao hàng ngay ({(space * 7).toFixed(0)} phút)</Text>
                 </View>
               </View>
               <Icon name="angle-right" size={25} color={COLOR.BLACK} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.inforItemContainer}>
+            <TouchableOpacity onPress={()=>{
+              setModalAddressVisible(true);
+            }} style={styles.inforItemContainer}>
               <View style={{flexDirection: 'row'}}>
                 <Icon name="map-marker-alt" size={25} color={COLOR.RED} />
-                <View style={{marginLeft: 20}}>
+                {newAddress === '' && <View style={{marginLeft: 20}}>
                   {user && (
                     <Text
                       style={[
@@ -153,9 +547,22 @@ export function Order({navigation}) {
                   )}
                   {/* {space && <Text>Khoảng {space} Km</Text>} */}
                   <Text style={{fontSize: 16}}>{space} Km</Text>
-                </View>
+                </View>}
+                {newAddress !== '' && <View style={{marginLeft: 20}}>
+                  {user && (
+                    <Text
+                      style={[
+                        styles.txtStyle,
+                        {fontSize: 20, fontWeight: '600'},
+                      ]}>
+                      {newAddress}
+                    </Text>
+                  )}
+                  {/* {space && <Text>Khoảng {space} Km</Text>} */}
+                  <Text style={{fontSize: 16}}>{space} Km</Text>
+                </View>}
               </View>
-              <Icon name="angle-right" size={25} color={COLOR.BLACK} />
+              {/* <Icon name="angle-right" size={25} color={COLOR.BLACK} /> */}
             </TouchableOpacity>
           </View>
           <View style={styles.itemsOrderContainer}>
@@ -179,7 +586,9 @@ export function Order({navigation}) {
                 <Text style={[styles.txtStyle, {fontSize: 16}]}>
                   Tổng tạm tính
                 </Text>
-                <Text style={[styles.txtStyle, {fontSize: 16}]}>{currencyFormat(total)} ₫</Text>
+                <Text style={[styles.txtStyle, {fontSize: 16}]}>
+                  {currencyFormat(total)} ₫
+                </Text>
               </View>
               <View
                 style={{
@@ -192,7 +601,9 @@ export function Order({navigation}) {
                 <Text style={[styles.txtStyle, {fontSize: 16}]}>
                   Phí áp dụng
                 </Text>
-                <Text style={[styles.txtStyle, {fontSize: 16}]}>{currencyFormat(fee)} ₫</Text>
+                <Text style={[styles.txtStyle, {fontSize: 16}]}>
+                  {currencyFormat(fee)} ₫
+                </Text>
               </View>
             </View>
           </View>
@@ -204,17 +615,24 @@ export function Order({navigation}) {
               ]}>
               Tùy chọn
             </Text>
-            <TouchableOpacity style={styles.optionItemContainer}>
-              <View style={{flexDirection: 'row'}}>
-                <Icon name="money-bill" size={25} color={COLOR.lightGray} />
-                <View style={{marginLeft: 20}}>
-                  <Text style={[styles.txtStyle, {fontSize: 16}]}>
-                    Tiền mặt
-                  </Text>
-                </View>
-              </View>
-              <Icon name="angle-right" size={25} color={COLOR.BLACK} />
-            </TouchableOpacity>
+
+            <Text
+              style={[
+                styles.txtStyle,
+                {
+                  fontSize: 16,
+                  marginLeft: 20,
+                  fontStyle: 'italic',
+                  marginTop: 10,
+                  color: COLOR.GREEN2,
+                },
+              ]}>
+              Hình thức thanh toán
+            </Text>
+            <DropdownComponent
+              data={dataDiscount}
+              setStyle={styles.dropdownDisCount}
+            />
             <TouchableOpacity style={styles.optionItemContainer}>
               <View style={{flexDirection: 'row'}}>
                 <Fontisto
@@ -237,22 +655,48 @@ export function Order({navigation}) {
   }
   const handleOrder = async () => {
     // let [userId,storeId,name,products,shippingfee,totalPrice]  = [user._id,store._id,user.name,cart,fee,total+fee]
-    const userId = user._id;
-    const storeId = store._id;
-    const name = store.name;
-    const products = cart;
-    const shippingfee = fee;
-    const totalPrice = total + fee;
-    await createOrder({
-      userId,
-      storeId,
-      name,
-      products,
-      shippingfee,
-      totalPrice,
-      navigation,
-    });
-    AsyncStorage.setItem('cart', '[]');
+    if (methodPayment == 'Thanh toán khi nhận hàng') {
+      const userId = user._id;
+      const storeId = store._id;
+      const name = store.name;
+      const products = cart;
+      const shippingfee = fee;
+      const totalPrice = total + fee;
+     // const paymentMethod = methodPayment;
+      const receiveAddress = store.address;
+      const deliveryAddress = newAddress!== '' ? newAddress : user.address ;
+      const created_date = new Date();
+
+      await createOrder({
+        userId,
+        storeId,
+        name,
+        products,
+        shippingfee,
+        totalPrice,
+        navigation,
+        receiveAddress,
+        deliveryAddress,
+        created_date
+      }).then(() => {
+        setModalVisible(true);
+        
+        setTimeout(() => {
+          setModalVisible(false);
+          navigation.navigate('Tabs');
+        }, 5000);
+        setNewAddress('')
+      });
+      AsyncStorage.setItem('cart', '[]');
+    } else if (methodPayment == 'Thẻ Visa/MasterCard') {
+      if (total + fee >= 23000) {
+        onCheckout();
+      } else {
+        Alert.alert(
+          'Giá trị đơn hàng phải lớn hơn 23.000đ mới có thể sử dụng hình thức thanh toán này',
+        );
+      }
+    }
   };
 
   const renderFooter = () => {
@@ -275,8 +719,51 @@ export function Order({navigation}) {
     );
   };
 
+  const renderModal = () => {
+    return (
+      <MyModal
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(false);
+        }}>
+        <View
+          style={{
+            height: 100,
+            width: 210,
+            backgroundColor: COLOR.WHITE,
+            borderRadius: 14,
+            shadowColor: '#000',
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+
+            elevation: 7,
+          }}>
+          <View
+            style={{
+              flex: 1,
+              marginTop: 10,
+              justifyContent: 'space-around',
+              alignItems: 'center',
+              flexDirection: 'row',
+            }}>
+            <AntDesign name="checkcircleo" size={30} color={COLOR.GREEN3} />
+            <Text style={{color: COLOR.BLACK, fontSize: 18, fontWeight: '600'}}>
+              Đặt đơn thành công
+            </Text>
+          </View>
+        </View>
+      </MyModal>
+    );
+  };
+
   return (
     <View style={styles.container}>
+      {renderModalPickAddress()}
+      {renderModal()}
       {renderHeader()}
       {renderInforOrder()}
       {renderFooter()}
@@ -349,5 +836,42 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  icon: {
+    marginRight: 5,
+  },
+  label: {
+    position: 'absolute',
+    backgroundColor: 'white',
+    left: 22,
+    top: 8,
+    zIndex: 999,
+    paddingHorizontal: 8,
+    fontSize: 14,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: 16,
+  },
+  dropdownDisCount: {
+    height: 60,
+    width: 300,
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    marginTop: 10,
+    marginLeft: 20,
   },
 });

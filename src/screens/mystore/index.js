@@ -9,6 +9,8 @@ import {
   ImageBackground,
   TouchableOpacity,
   RefreshControl,
+  Alert,
+  TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -25,6 +27,7 @@ import {
   findProductByIdStore,
   getOrderByStoreId,
   deleteProduct,
+  updateStore,
 } from '../../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -35,6 +38,7 @@ import {
   ContributionGraph,
   StackedBarChart,
 } from 'react-native-chart-kit';
+import {Input} from '../../components';
 export function MyStore({navigation}) {
   const [productInMyStore, setProductInMyStore] = useState('1');
   const [tab, setTab] = useState(1);
@@ -44,7 +48,17 @@ export function MyStore({navigation}) {
   const [product, setProduct] = useState(null);
   const [orders, setOrders] = useState([]);
   const [status, setStatus] = useState('Chờ xác nhận');
+
   const [modalVisible, setModalVisible] = useState(false);
+  const [modalUpdateStoreVisible, setModalUpdateStoreVisible] = useState(false);
+
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [tag, setTag] = useState('');
+  const [address, setAddress] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+
   const [orderWithStatus, setOrderWithStatus] = useState(null);
   const [ordersWithMonth1, setOrdersWithMonth1] = useState([]);
   const [ordersWithMonth2, setOrdersWithMonth2] = useState([]);
@@ -81,11 +95,23 @@ export function MyStore({navigation}) {
   };
 
   const handleDeleteProduct = async () => {
-
-    const id = itemSelected._id;
-    await deleteProduct({id}).then(() => {
-      setModalVisible(false);
-    });
+    Alert.alert('Thông báo', 'Bạn có chắc muốn xóa?', [
+      {
+        text: 'Hủy',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {
+        text: 'Có',
+        onPress: async () => {
+          const id = itemSelected._id;
+          await deleteProduct({id}).then(async () => {
+            setModalVisible(false);
+            loaddingProducts();
+          });
+        },
+      },
+    ]);
   };
 
   useEffect(() => {
@@ -101,6 +127,12 @@ export function MyStore({navigation}) {
       const fetchData = async () => {
         const pr = await findStoreByUserId({userId});
         setStore(pr);
+        setName(pr.name);
+        setDescription(pr.description);
+        setPhone(pr.phone);
+        setEmail(pr.email);
+        setAddress(pr.address);
+        setTag(pr.tag);
       };
       fetchData();
     }
@@ -197,11 +229,56 @@ export function MyStore({navigation}) {
     );
     // console.log('Month========', month);
   }
+
+  const loaddingProducts = async () => {
+    const storeId = store._id;
+    const pr = await findProductByIdStore({storeId});
+    setProduct(pr);
+  };
+
+  const handleUpdateStore = async () => {
+    setModalUpdateStoreVisible(true);
+  };
+
+  const onUpdateStore = async () => {
+    const storeId = store._id;
+    await updateStore({
+      storeId,
+      name,
+      description,
+      tag,
+      email,
+      phone,
+      address,
+    }).then(async () => {
+      // await loadingStore();
+    });
+
+    setModalUpdateStoreVisible(false);
+  };
+
+  const loadingStore = async () => {
+    if (user) {
+      console.log('Loading');
+      const userId = user._id;
+      const fetchData = async () => {
+        const pr = await findStoreByUserId({userId});
+        setStore(pr);
+        setName(pr.name);
+        setDescription(pr.description);
+        setPhone(pr.phone);
+        setEmail(pr.email);
+        setAddress(pr.address);
+        setTag(pr.tag);
+      };
+      fetchData();
+    }
+  };
   // console.log('Store ==========>', store);
   // console.log('product ==========>', product);
   // console.log('orders ==========>', orders);
   // console.log('selectedItem ==========>', itemSelected.name);
-
+  console.log('name ==========>', name);
   const [refreshing, setRefreshing] = useState(false);
   const loadData = async () => {
     // Tải thêm dữ liệu từ server
@@ -272,7 +349,7 @@ export function MyStore({navigation}) {
           }}>
           <Image source={{uri: store.image}} style={styles.image} />
           <View style={{width: width * 0.5}}>
-            <Text style={{color: COLOR.WHITE, fontSize: 20}}>{store.name}</Text>
+            <Text style={{color: COLOR.WHITE, fontSize: 20}}>{name}</Text>
             {store.status && <Text style={{color: COLOR.WHITE}}>Mở cửa</Text>}
             {store.status != true && (
               <Text style={{color: COLOR.WHITE}}>Đóng cửa</Text>
@@ -286,6 +363,7 @@ export function MyStore({navigation}) {
             </View>
           </View>
           <TouchableOpacity
+            onPress={handleUpdateStore}
             style={{
               borderWidth: 1,
               borderColor: COLOR.WHITE,
@@ -988,10 +1066,152 @@ export function MyStore({navigation}) {
     );
   };
 
+  const renderModalUpdateStore = () => {
+    return (
+      <MyModal
+        visible={modalUpdateStoreVisible}
+        onRequestClose={() => {
+          setModalUpdateStoreVisible(false);
+        }}>
+        <View
+          style={{
+            height: height - 40,
+            width: width - 40,
+            backgroundColor: COLOR.WHITE,
+            borderRadius: 14,
+            shadowColor: '#000',
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.25,
+            shadowRadius: 3.84,
+            top: 20,
+            left: 20,
+            elevation: 7,
+            position: 'absolute',
+          }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              margin: 5,
+              marginHorizontal: 10,
+            }}>
+            <Text
+              style={{
+                fontSize: 22,
+                fontWeight: '500',
+                fontStyle: 'italic',
+                color: COLOR.BLACK,
+              }}>
+              Cập nhật thông tin cửa hàng
+            </Text>
+            <TouchableOpacity
+              onPress={() => {
+                setModalUpdateStoreVisible(false);
+                loadingStore();
+              }}
+              style={{}}>
+              <FontAwesome5 name="times" size={30} color={COLOR.BLACK} />
+            </TouchableOpacity>
+          </View>
+          <View style={{padding: 10, flex: 1, paddingTop: 0}}>
+            <View style={styles.itemInContent}>
+              <Text style={styles.textTitle}>Tên Shop:</Text>
+              <Input
+                style={{marginTop: 10}}
+                placeholder="Tên shop..."
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+            <View style={styles.itemInContent}>
+              <Text style={styles.textTitle}>Mô tả:</Text>
+              <TextInput
+                style={styles.areaTextInput}
+                placeholder="Mô tả..."
+                multiline
+                value={description}
+                onChangeText={setDescription}
+              />
+            </View>
+            <View style={styles.itemInContent}>
+              <Text style={styles.textTitle}>Nổi bật:</Text>
+              <Input
+                style={{marginTop: 10}}
+                placeholder="..."
+                value={tag}
+                onChangeText={setTag}
+              />
+            </View>
+            <View style={styles.itemInContent}>
+              <Text style={styles.textTitle}>Email:</Text>
+              <Input
+                style={{marginTop: 10}}
+                placeholder="..."
+                value={email}
+                onChangeText={setEmail}
+              />
+            </View>
+            <View style={styles.itemInContent}>
+              <Text style={styles.textTitle}>Số điện thoại:</Text>
+              <Input
+                style={{marginTop: 10}}
+                placeholder="..."
+                value={phone}
+                onChangeText={setPhone}
+              />
+            </View>
+            <View style={styles.itemInContent}>
+              <Text style={styles.textTitle}>Địa chỉ:</Text>
+              <Input
+                style={{marginTop: 10}}
+                placeholder="..."
+                value={address}
+                onChangeText={setAddress}
+              />
+            </View>
+          </View>
+          <View
+            style={{
+              height: 70,
+              flexDirection: 'row',
+              justifyContent: 'space-around',
+              marginTop: 10,
+            }}>
+            <View
+              style={{
+                flex: 1,
+                flexDirection: 'row',
+                justifyContent: 'space-around',
+                marginTop: 10,
+              }}>
+              <TouchableOpacity
+                style={styles.btnCancel}
+                onPress={async () => {
+                  await loadingStore()
+                    setModalUpdateStoreVisible(false);
+               
+                  
+                }}>
+                <Text style={styles.txtInBtn}>Hủy</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={onUpdateStore} style={styles.btnPost}>
+                <Text style={styles.txtInBtn}>Cập nhật</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </MyModal>
+    );
+  };
+
   if (store) {
     return (
       <View style={styles.container}>
         {renderModal()}
+        {renderModalUpdateStore()}
         <ScrollView
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -1117,14 +1337,14 @@ const styles = StyleSheet.create({
   btnCancel: {
     backgroundColor: COLOR.ORGANGE,
     height: 45,
-    width: 70,
+    width: 100,
     borderRadius: 10,
     justifyContent: 'center',
   },
   btnPost: {
-    backgroundColor: COLOR.RED,
+    backgroundColor: COLOR.GREEN2,
     height: 45,
-    width: 70,
+    width: 100,
     borderRadius: 10,
     justifyContent: 'center',
   },
@@ -1133,5 +1353,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
     alignSelf: 'center',
+  },
+  itemInContent: {
+    justifyContent: 'center',
+    marginTop: 10,
+    marginHorizontal: 10,
+  },
+  textTitle: {
+    fontSize: 18,
+    fontWeight: '400',
+    color: COLOR.BLACK,
+  },
+  areaTextInput: {
+    marginTop: 10,
+    height: 100,
+    backgroundColor: COLOR.GREY_LIGHT,
+    borderRadius: 10,
+    paddingLeft: 40,
+    paddingRight: 10,
+    fontSize: 16,
   },
 });
