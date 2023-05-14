@@ -10,6 +10,8 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  TextInput,
+  Modal,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CheckboxList from 'rn-checkbox-list';
@@ -17,6 +19,7 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {data as listData, dataDetail} from '../../data/data';
+import socket from '../../api/socket';
 const {width, height} = Dimensions.get('window');
 import {MyModal} from '../../components';
 
@@ -29,8 +32,13 @@ export const DetailItem = ({route, navigation}) => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalPriceOption, setTotalPriceOption] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [storeOrder, setStoreOrder] = useState([]);
+  const [storeOrder, setStoreOrder] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
+  const [storeIncart, setStoreIncart] = useState({});
+  const [note, setNote] = useState('');
+
+  const [showModalTime, setShowModalTime] = useState(0);
+
   useEffect(() => {
     let {data} = route.params;
     let {store} = route.params;
@@ -42,14 +50,26 @@ export const DetailItem = ({route, navigation}) => {
   }, [data]);
   useEffect(() => {
     AsyncStorage.getItem('cart').then(result => {
-      console.log('resurl', JSON.parse(result));
+      console.log('resurl ======>', JSON.parse(result));
       setCart(JSON.parse(result));
+      if (result == '[]') {
+        console.log('heloo===============================');
+        setStoreIncart({});
+      } else {
+        AsyncStorage.getItem('storeOrder').then(result => {
+          //  console.log('storeOrder', JSON.parse(result));
+          setStoreIncart(JSON.parse(result));
+        });
+      }
     });
   }, []);
+
   useEffect(() => {
     AsyncStorage.setItem('cart', JSON.stringify(cart));
     console.log('cart', cart);
   }, [cart]);
+
+  console.log('storeOrder=======>', storeIncart);
 
   function currencyFormat(num) {
     return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
@@ -58,14 +78,18 @@ export const DetailItem = ({route, navigation}) => {
   function containsObject(obj, list) {
     var i;
     for (i = 0; i < list.length; i++) {
-        if (list[i]._id === obj._id) {
-            return true;
-        }
+      if (list[i]._id === obj._id) {
+        return true;
+      }
     }
 
     return false;
-}
+  }
 
+  const showSuccessModal = () => {
+    setModalVisible(true);
+    setShowModalTime(Date.now() + 3000); // Hiển thị modal trong 3 giây
+  };
 
   function renderDetailItem(data) {
     return (
@@ -99,8 +123,8 @@ export const DetailItem = ({route, navigation}) => {
               {data.price}
             </Text>
             <Text style={{color: COLOR.lightGray, fontSize: 18}}>Giá gốc</Text> */}
-              {data.discount == 0 && (
-              <View style={{flexDirection: 'row',alignItems:'center'}}>
+            {data.discount == 0 && (
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
                 <Text
                   style={{
                     color: COLOR.BLACK,
@@ -225,7 +249,11 @@ export const DetailItem = ({route, navigation}) => {
           <Text>Không bắt buộc</Text>
         </View>
         <TouchableOpacity style={styles.btnNotification}>
-          <Text>Tùy thuộc vào khả năng của quán</Text>
+          <TextInput
+            value={note}
+            placeholder="Tùy thuộc vào khả năng của quán"
+            onChangeText={setNote}
+          />
         </TouchableOpacity>
         <View
           style={{
@@ -251,21 +279,40 @@ export const DetailItem = ({route, navigation}) => {
 
   const addToCart = async () => {
     const newCart = [...cart];
-   if(data){
-    if (containsObject(data,newCart)) {
-      Alert.alert('Mặt hàng này đã có trong giỏ hàng');
-    } else {
-     
-      const newData = {
-        ...data,
-        quantity,
-        total: price * quantity + totalPriceOption * quantity,
-      };
-      newCart.push(newData);
-      console.log('addtoCart');
-      setCart(newCart);
+    if (data) {
+      if (containsObject(data, newCart)) {
+        Alert.alert('Mặt hàng này đã có trong giỏ hàng');
+      } else {
+        const newData = {
+          ...data,
+          quantity,
+          total: price * quantity + totalPriceOption * quantity,
+          note,
+        };
+        newCart.push(newData);
+        console.log('addtoCart');
+        setCart(newCart);
+      }
     }
-   }
+  };
+
+  const addToCart2 = async () => {
+    const newCart = [];
+    if (data) {
+      if (containsObject(data, newCart)) {
+        Alert.alert('Mặt hàng này đã có trong giỏ hàng');
+      } else {
+        const newData = {
+          ...data,
+          quantity,
+          total: price * quantity + totalPriceOption * quantity,
+          note,
+        };
+        newCart.push(newData);
+        console.log('addtoCart');
+        setCart(newCart);
+      }
+    }
   };
 
   const renderModal = () => {
@@ -291,17 +338,18 @@ export const DetailItem = ({route, navigation}) => {
 
             elevation: 7,
           }}>
-         
           <View
             style={{
               flex: 1,
               marginTop: 10,
-              justifyContent:'space-around',
-              alignItems:'center',
-              flexDirection:'row'
+              justifyContent: 'space-around',
+              alignItems: 'center',
+              flexDirection: 'row',
             }}>
-               <AntDesign name="checkcircleo" size={30} color={COLOR.GREEN3} />
-           <Text style={{color:COLOR.BLACK,fontSize:18,fontWeight:'600'}}>Thêm thành công</Text>
+            <AntDesign name="checkcircleo" size={30} color={COLOR.GREEN3} />
+            <Text style={{color: COLOR.BLACK, fontSize: 18, fontWeight: '600'}}>
+              Thêm thành công
+            </Text>
           </View>
         </View>
       </MyModal>
@@ -314,7 +362,8 @@ export const DetailItem = ({route, navigation}) => {
         style={{
           flex: 1,
         }}>
-          {renderModal()}
+        {renderModal()}
+        
         <ScrollView>
           <View style={{backgroundColor: COLOR.WHITE}}>
             {renderDetailItem(data)}
@@ -337,17 +386,54 @@ export const DetailItem = ({route, navigation}) => {
           }}>
           <TouchableOpacity
             onPress={async () => {
-              console.log('add');
-              await addToCart().then(() =>{
-                AsyncStorage.setItem('storeOrder', JSON.stringify(storeOrder));
-                setModalVisible(true)
-                setTimeout(() => {
-                  setModalVisible(false)
-                  navigation.goBack();
-                }, 1500)
-              //  clearTimeout(timeoutId)
-              })
-              
+              if (
+                storeIncart._id === storeOrder._id ||
+                JSON.stringify(storeIncart) == '{}'
+              ) {
+                socket.emit('ADD_ITEM_INTO_CART');
+                await addToCart().then(() => {
+                  AsyncStorage.setItem(
+                    'storeOrder',
+                    JSON.stringify(storeOrder),
+                  );
+                  setModalVisible(true)
+                   setTimeout(() => {
+                      setModalVisible(false)
+                      navigation.goBack();
+                    }, 1500)
+                  //   timeoutId()
+                  //  clearTimeout(timeoutId)
+                });
+              } else {
+                Alert.alert(
+                  'Tạo giỏ hàng mới ?',
+                  `Bạn có muốn xóa giỏ hàng ${storeIncart.name} và tạo giỏ hàng mới này không?`,
+                  [
+                    {
+                      text: 'Hủy',
+                      onPress: () => console.log('Cancel Pressed'),
+                      style: 'cancel',
+                    },
+                    {
+                      text: 'Có',
+                      onPress: async () => {
+                        await addToCart2().then(() => {
+                          AsyncStorage.setItem(
+                            'storeOrder',
+                            JSON.stringify(storeOrder),
+                          );
+                          setModalVisible(true);
+                          setTimeout(() => {
+                            setModalVisible(false);
+                            navigation.goBack();
+                          }, 1500);
+                          //  clearTimeout(timeoutId)
+                        });
+                      },
+                    },
+                  ],
+                );
+              }
             }}>
             <Text style={{fontSize: 18, fontWeight: '600'}}>
               Thêm vào giỏ hàng - {price * quantity + totalPriceOption}

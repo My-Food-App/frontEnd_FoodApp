@@ -12,14 +12,17 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
-import {getStores} from '../../api';
+import {getStores,searchStoreByName} from '../../api';
 const {width, height} = Dimensions.get('window');
 
 export function ManagerStore({navigation}) {
   const [stores, setStores] = useState([]);
   const [load, setLoad] = useState(false);
+  const [searchModalVisiable, setSearchModalVisiable] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const [storesSearch, setStoresSearch] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,6 +31,14 @@ export function ManagerStore({navigation}) {
     };
     fetchData();
   }, [load]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const pr = await searchStoreByName({searchValue});
+      setStoresSearch(pr);
+    };
+    fetchData();
+  }, [searchValue]);
 
   function renderHeader() {
     return (
@@ -121,8 +132,30 @@ export function ManagerStore({navigation}) {
   return (
     <View style={styles.container}>
       {renderHeader()}
+      <TouchableOpacity
+        style={{zIndex: 10}}
+        onPress={() => {
+          setSearchModalVisiable(!searchModalVisiable);
+        }}>
+        <Ionicons
+          name="search"
+          size={40}
+          style={styles.findIcon}
+          color={COLOR.BLACK}
+        />
+      </TouchableOpacity>
+      {searchModalVisiable && (
+        <View style={styles.searchContainer}>
+          <TextInput 
+          style={styles.search}
+          placeholder="Nhập tên ..." 
+          value={searchValue}
+          onChangeText={setSearchValue}
+          />
+        </View>
+      )}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {renderStore(stores)}
+        {renderStore(storesSearch ? storesSearch : stores)}
       </ScrollView>
     </View>
   );
@@ -154,4 +187,20 @@ const styles = StyleSheet.create({
   address: {
     fontSize: 16,
   },
+  findIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  searchContainer: {
+    height: 70,
+    justifyContent: 'center',
+  },
+  search:{
+    marginLeft:10,
+    borderRadius:10,
+    borderWidth:1,
+    width:300,
+    fontSize:18
+  }
 });

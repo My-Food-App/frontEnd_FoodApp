@@ -20,35 +20,50 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {Input} from '../../components';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {createProduct} from '../../api';
+import {createProduct,getCategories} from '../../api';
 const {width, height} = Dimensions.get('window');
 export function CreateProduct({navigation, route}) {
   const [idStore, setIdStore] = useState(null);
+  const [categories, setCategories] = useState([]);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState(0);
   const [imageUri, setImageUri] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [category, setCategory] = useState('');
   useEffect(() => {
     let {store} = route.params;
     setIdStore(store._id);
   }, [idStore]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const pr = await getCategories();
+      setCategories(pr);
+    };
+    fetchData();
+  }, []);
+
+  console.log("CATEGORY======",category)
+
 console.log("DISCOUNT======",discount)
+
   const handleCreateProduct = () => {
     console.log('Create Product');
     if(imageUri){
       const image = imageUri
-      createProduct({name, description, idStore, price,image,discount}).then(() => {
+      createProduct({name, description, idStore, price,image,discount,category}).then(() => {
         navigation.goBack();
         setImageUri("")
       });
     }else{
-      createProduct({name, description, idStore, price,discount}).then(() => {
+      createProduct({name, description, idStore, price,discount,category}).then(() => {
         navigation.goBack();
       });
 
     }
   };
+
 
   const openCamera = () => {
     const options = {
@@ -118,6 +133,7 @@ console.log("DISCOUNT======",discount)
     {label: 'Item 8', value: '8'},
   ];
   const dataDiscount = [
+    {label: '0 %', value: 0},
     {label: '5 %', value: 5},
     {label: '10 %', value: 10},
     {label: '15 %', value: 15},
@@ -183,6 +199,62 @@ console.log("DISCOUNT======",discount)
       </View>
     );
   };
+
+  const DropdownComponent2 = ({data, setStyle}) => {
+    const [value, setValue] = useState(null);
+    const [isFocus, setIsFocus] = useState(false);
+
+    const renderLabel = () => {
+      if (value || isFocus) {
+        return (
+          <Text
+            style={[
+              styles.label,
+              isFocus && {fontSize: 18, fontWeight: '400', color: COLOR.BLACK},
+            ]}>
+            Chọn
+          </Text>
+        );
+      }
+      return null;
+    };
+
+    return (
+      <View style={styles.container}>
+        {renderLabel()}
+        <Dropdown
+          style={[setStyle, isFocus && {borderColor: 'blue'}]}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          inputSearchStyle={styles.inputSearchStyle}
+          iconStyle={styles.iconStyle}
+          data={data}
+          search
+          maxHeight={300}
+          labelField="name"
+          valueField="name"
+          placeholder={!isFocus ? 'Chọn' : '...'}
+          searchPlaceholder="Search..."
+          value={category}
+          onFocus={() => setIsFocus(true)}
+          onBlur={() => setIsFocus(false)}
+          onChange={item => {
+            setCategory(item.name);
+            setIsFocus(false);
+          }}
+          renderLeftIcon={() => (
+            <AntDesign
+              style={styles.icon}
+              color={isFocus ? 'blue' : 'black'}
+              name="Safety"
+              size={20}
+            />
+          )}
+        />
+      </View>
+    );
+  };
+
   function renderCotent() {
     return (
       <ScrollView
@@ -197,18 +269,11 @@ console.log("DISCOUNT======",discount)
             onChangeText={setName}
           />
         </View>
-        {/* <View style={styles.itemInContent}>
+        <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Loại sản phẩm:</Text>
-          <DropdownComponent data={data} setStyle={styles.dropdown} />
-        </View> */}
-        {/* <View style={styles.itemInContent}>
-          <Text style={styles.textTitle}>Số Lượng:</Text>
-          <Input
-            style={{marginTop: 10}}
-            placeholder="Số lượng..."
-            keyboardType="numeric"
-          />
-        </View> */}
+          <DropdownComponent2 data={categories} setStyle={styles.dropdownDisCount} />
+        </View>
+
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Giá:</Text>
           <Input

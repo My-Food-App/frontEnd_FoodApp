@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { View, Text, Pressable, StyleSheet,Alert } from "react-native";
 import { Input, Button, Title, Description } from "../../components";
 import { Authentication } from "../../layouts";
@@ -10,6 +10,16 @@ import { login } from "../../api";
 export function Login({ navigation }) {
     const [username, setUsername] = useState('minhieu');
     const [password, setPassword] = useState('123456');
+
+    // useEffect(() => {
+        
+    //     const fetchData = async () => {
+    //         const pr = await login({username, password,navigation});
+            
+    //       };
+    //       fetchData();
+    //   }, []);
+
     const handleLogin = async () => {
         console.log(username);
         console.log(password);

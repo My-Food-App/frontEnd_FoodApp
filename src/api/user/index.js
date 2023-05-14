@@ -102,3 +102,21 @@ export const updateAccount = async ({
       console.log(error);
     });
 };
+export const searchAccount = async ({keyWord}) => {
+  let data = JSON.stringify({
+    keyWord
+  });
+  
+  let config = {
+    method: 'post',
+    maxBodyLength: Infinity,
+    url: `http://${ip}:3005/api/v1/users/findByName`,
+    headers: { 
+      'Content-Type': 'application/json'
+    },
+    data : data
+  };
+
+  value = (await axios(config)).data;
+  return value;
+}

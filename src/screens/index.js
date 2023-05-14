@@ -32,3 +32,4 @@ export {ManagerAccountDetail} from './manage.account.detail';
 export {ManageStoreDetail} from './manage.store.detail';
 export {CreateShipper} from './create.shipper';
 export {UpdateProduct} from './update.product';
+export {ManageCategogy} from './manage.categories';

@@ -21,6 +21,7 @@ import {MyModal} from '../../components';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {Button} from '../../components';
 import {createStore} from '../../api';
+import socket from '../../api/socket'
 
 export function MyStoreInfomation({navigation}) {
   const [userId, setUserId] = useState('');
@@ -173,6 +174,7 @@ export function MyStoreInfomation({navigation}) {
   };
 
   const handleCreateStore = () => {
+    socket.emit("CHANGE_STORE")
     console.log('ADD');
     if (address !== '') {
       const image = imageUri;

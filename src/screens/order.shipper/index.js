@@ -23,8 +23,8 @@ export function OrderShiper({navigation}) {
   const [shipperId, setShipperId] = useState(null);
   const [orders, setOrders] = useState(null);
   const [load, setLoad] = useState(true);
-  const [subTab, setSubTab] = useState(2);
-  const [status, setStatus] = useState('Chờ lấy');
+  const [subTab, setSubTab] = useState(3);
+  const [status, setStatus] = useState('Đang giao');
   const [orderWithStatus, setOrderWithStatus] = useState(null);
 
   useEffect(() => {
@@ -82,27 +82,7 @@ export function OrderShiper({navigation}) {
             Chờ xác nhận
           </Text>
         </TouchableOpacity> */}
-        <TouchableOpacity
-          onPress={() => {
-            setSubTab(2);
-            setStatus('Chờ lấy');
-          }}
-          style={{
-            width: width * 0.25,
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderBottomColor: subTab == 2 ? COLOR.ORGANGE : COLOR.lightGray4,
-            borderBottomWidth: subTab == 2 ? 1 : 0,
-          }}>
-          <Text
-            style={{
-              fontSize: 16,
-              fontWeight: '500',
-              color: subTab == 2 ? COLOR.ORGANGE : COLOR.BLACK,
-            }}>
-            Chờ lấy
-          </Text>
-        </TouchableOpacity>
+       
         <TouchableOpacity
           onPress={() => {
             setSubTab(3);

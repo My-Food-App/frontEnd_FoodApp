@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   TextInput,
-  Alert
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -21,8 +21,10 @@ import {
   updateOrderById,
   getStoreById,
   getOrderById,
+  findStoreByUserId,
 } from '../../api';
 import moment from 'moment';
+import socket from '../../api/socket';
 const {width, height} = Dimensions.get('window');
 
 export function OrderDetail({navigation, route}) {
@@ -38,8 +40,8 @@ export function OrderDetail({navigation, route}) {
   const [status, setStatus] = useState('Chờ lấy');
   const [statusSelected, setStatusSelected] = useState(null);
   const [statusClone, setStatusClone] = useState(null);
+  const [storeCurrent, setStoreCurrent] = useState(null);
   const listStatus = [
-    {id: 1, name: 'Chờ lấy'},
     {id: 2, name: 'Đang giao'},
     {id: 3, name: 'Đã giao'},
   ];
@@ -93,13 +95,27 @@ export function OrderDetail({navigation, route}) {
     }
   }, [data]);
   console.log('STORE =>>>>', store);
-  const handleReceiveOrder = () => {
-    console.log('click');
+  const handleReceiveOrder = async () => {
     if ((orderId, shipperId)) {
-      updateOrderById({orderId, status, shipperId});
+      const status = 'Đang giao';
+      await updateOrderById({orderId, status, shipperId}); 
       navigation.navigate('ShiperTabs');
+      socket.emit('CHANGE_ORDER');
     }
   };
+
+  useEffect(() => {
+    if (userCurrent) {
+      const userId = userCurrent._id;
+      const fetchData = async () => {
+        const pr = await findStoreByUserId({userId});
+        setStoreCurrent(pr);
+      };
+      fetchData();
+    }
+  }, [userCurrent]);
+  console.log('storeCurrent =>>>>', storeCurrent);
+
   useEffect(() => {
     if (statusSelected) {
       setStatusClone(statusSelected);
@@ -112,13 +128,12 @@ export function OrderDetail({navigation, route}) {
     console.log('update');
     setModalVisible(true);
   };
-  const handleConfirmChangeStatus = () => {
+  const handleConfirmChangeStatus = async () => {
     const status = statusClone;
-    updateOrderById({orderId, status});
+    await updateOrderById({orderId, status});
     setModalVisible(false);
+    socket.emit('CHANGE_ORDER');
   };
-
-
 
   const handleCancelOrder = () => {
     Alert.alert('Thông báo', 'Bạn có chắc muốn hủy đơn?', [
@@ -131,7 +146,9 @@ export function OrderDetail({navigation, route}) {
         text: 'Có',
         onPress: async () => {
           const status = 'Đã hủy';
-         await updateOrderById({orderId, status}).then(() => navigation.navigate("ShiperTabs"))
+          await updateOrderById({orderId, status}).then(() =>
+            navigation.navigate('ShiperTabs'),
+          );
         },
       },
     ]);
@@ -148,10 +165,39 @@ export function OrderDetail({navigation, route}) {
         text: 'Có',
         onPress: async () => {
           const status = 'Đã hủy';
-         await updateOrderById({orderId, status}).then(() => navigation.navigate("MyOrder"))
+          await updateOrderById({orderId, status}).then(() => {         
+            navigation.navigate('MyOrder');
+            socket.emit('CHANGE_ORDER');
+          });
         },
       },
     ]);
+  };
+
+  const handleCancelOrderForStore = () => {
+    Alert.alert('Thông báo', 'Bạn có chắc muốn từ chối đơn hàng?', [
+      {
+        text: 'Hủy',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {
+        text: 'Có',
+        onPress: async () => {
+          const status = 'Đã hủy';
+          await updateOrderById({orderId, status}).then(() => {
+            navigation.goBack();
+            socket.emit('CHANGE_ORDER');
+          });
+        },
+      },
+    ]);
+  };
+
+  const handlereceiveOrderForStore = async () => {
+    socket.emit('CHANGE_ORDER');
+    const status = 'Chờ lấy';
+    await updateOrderById({orderId, status}).then(() => navigation.goBack());
   };
 
   function currencyFormat(num) {
@@ -182,13 +228,13 @@ export function OrderDetail({navigation, route}) {
               {item.quantity}x
             </Text>
 
-            <Text
-              style={[
-                styles.txtStyle,
-                {fontSize: 16, fontWeight: '600', marginLeft: 20},
-              ]}>
-              {item.name}
-            </Text>
+            <View style={{marginLeft: 20}}>
+              <Text
+                style={[styles.txtStyle, {fontSize: 20, fontWeight: '600'}]}>
+                {item.name}
+              </Text>
+              {item.note && <Text>{item.note}</Text>}
+            </View>
           </View>
           <Text style={[styles.txtStyle, {fontSize: 16}]}>
             {currencyFormat(item.total)} ₫
@@ -255,8 +301,12 @@ export function OrderDetail({navigation, route}) {
             </Text>
             <Text style={styles.txtInforUser}>{store.name}</Text>
             <Text style={styles.txtInforUser}>{store.phone}</Text>
-            {order.receiveAddress && <Text style={styles.txtInforUser}>{order.receiveAddress}</Text>}
-            {!order.receiveAddress && <Text style={styles.txtInforUser}>{store.address}</Text>}
+            {order.receiveAddress && (
+              <Text style={styles.txtInforUser}>{order.receiveAddress}</Text>
+            )}
+            {!order.receiveAddress && (
+              <Text style={styles.txtInforUser}>{store.address}</Text>
+            )}
           </View>
         </View>
         <View style={styles.clientInforContainer}>
@@ -273,9 +323,13 @@ export function OrderDetail({navigation, route}) {
             </Text>
             <Text style={styles.txtInforUser}>{user.fullname}</Text>
             <Text style={styles.txtInforUser}>{user.phone}</Text>
-            
-            {order.deliveryAddress && <Text style={styles.txtInforUser}>{order.deliveryAddress}</Text>}
-            {!order.deliveryAddress && <Text style={styles.txtInforUser}>{user.address}</Text>}
+
+            {order.deliveryAddress && (
+              <Text style={styles.txtInforUser}>{order.deliveryAddress}</Text>
+            )}
+            {!order.deliveryAddress && (
+              <Text style={styles.txtInforUser}>{user.address}</Text>
+            )}
           </View>
         </View>
         <View style={styles.clientInforContainer}>
@@ -387,7 +441,7 @@ export function OrderDetail({navigation, route}) {
               </View>
             </View>
           </View>
-          {data.status === 'Chờ lấy' && data.shipperId == userCurrent._id  && (
+          {data.status === 'Chờ lấy' && data.shipperId == userCurrent._id && (
             <TouchableOpacity
               onPress={handleCancelOrder}
               style={{
@@ -405,23 +459,78 @@ export function OrderDetail({navigation, route}) {
               </Text>
             </TouchableOpacity>
           )}
-          {data.status === 'Chờ xác nhận' && data.userId == userCurrent._id && (
-            <TouchableOpacity
-              onPress={handleCancelOrderForUser}
-              style={{
-                backgroundColor: COLOR.ORGANGE,
-                height: 50,
-                width: 130,
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderRadius: 10,
-                alignSelf: 'center',
-              }}>
-              <Text
-                style={{color: COLOR.BLACK, fontSize: 20, fontWeight: '600'}}>
-                Hủy đơn
-              </Text>
-            </TouchableOpacity>
+          {data.status === 'Chờ xác nhận' &&
+            data.userId == userCurrent._id &&
+            data.storeId !== storeCurrent._id && (
+              <TouchableOpacity
+                onPress={handleCancelOrderForUser}
+                style={{
+                  backgroundColor: COLOR.ORGANGE,
+                  height: 50,
+                  width: 130,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  borderRadius: 10,
+                  alignSelf: 'center',
+                }}>
+                <Text
+                  style={{color: COLOR.BLACK, fontSize: 20, fontWeight: '600'}}>
+                  Hủy đơn
+                </Text>
+              </TouchableOpacity>
+            )}
+
+          {data.storeId == storeCurrent._id && (
+            <View
+              style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+              {data.status === 'Chờ xác nhận' &&
+                data.userId == userCurrent._id && (
+                  <TouchableOpacity
+                    onPress={handleCancelOrderForStore}
+                    style={{
+                      backgroundColor: COLOR.ORGANGE,
+                      height: 50,
+                      width: 130,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderRadius: 10,
+                      alignSelf: 'center',
+                    }}>
+                    <Text
+                      style={{
+                        color: COLOR.BLACK,
+                        fontSize: 20,
+                        fontWeight: '600',
+                      }}>
+                      Từ chối
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+              {data.status === 'Chờ xác nhận' &&
+                data.storeId == storeCurrent._id && (
+                  <TouchableOpacity
+                    onPress={handlereceiveOrderForStore}
+                    style={{
+                      backgroundColor: COLOR.MAIN,
+                      height: 50,
+                      width: 130,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      borderRadius: 10,
+                      alignSelf: 'center',
+                    }}>
+                    <Text
+                      style={{
+                        color: COLOR.BLACK,
+                        fontSize: 20,
+                        fontWeight: '600',
+                      }}>
+                      Nhận đơn
+                    </Text>
+                  </TouchableOpacity>
+                )}
+            </View>
           )}
         </View>
       </View>
@@ -491,7 +600,7 @@ export function OrderDetail({navigation, route}) {
         }}>
         <View
           style={{
-            height: 260,
+            height: 230,
             width: 250,
             backgroundColor: COLOR.WHITE,
             borderRadius: 14,
@@ -569,7 +678,7 @@ export function OrderDetail({navigation, route}) {
     );
   };
 
-  if (order && user && store) {
+  if (order && user && store && storeCurrent) {
     return (
       <View style={styles.container}>
         {renderModal()}

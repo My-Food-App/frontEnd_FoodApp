@@ -30,6 +30,7 @@ export const createProduct = async ({
   price,
   image,
   discount,
+  category
 }) => {
   var data = JSON.stringify({
     name,
@@ -38,6 +39,7 @@ export const createProduct = async ({
     price,
     image,
     discount,
+    category
   });
 
   var config = {
@@ -65,6 +67,7 @@ export const updateProduct = async ({
   price,
   image,
   discount,
+  category
 }) => {
   let data = JSON.stringify({
     id,
@@ -73,6 +76,7 @@ export const updateProduct = async ({
     price,
     image,
     discount,
+    category
   });
 
   let config = {

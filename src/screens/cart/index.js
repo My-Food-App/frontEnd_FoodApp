@@ -32,7 +32,9 @@ export function Cart({navigation}) {
   }, []);
   useEffect(() => {
     AsyncStorage.setItem('cart', JSON.stringify(cart));
-
+    if(cart==[]){
+      AsyncStorage.setItem('storeOrder', '[]');
+    }
     console.log('newcart', cart);
   }, [cart]);
 

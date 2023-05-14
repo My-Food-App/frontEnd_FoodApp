@@ -328,7 +328,7 @@ export function Register({navigation}) {
   };
 
   const handleRegister = async () => {
-   if(errorEmail == '' && errorPassword =='' && errorUserName == '' && errorPhone =='' && address !=='') {
+   if(errorEmail == '' && errorPassword =='' && errorUserName == '' && errorPhone =='' && address !=='' && errorValidateEmail =='' && errorValidatePhone == '' && errorValidateUserName =='') {
     await register({
       username,
       password,

@@ -11,6 +11,7 @@ import {
   RefreshControl,
   Alert,
   TextInput,
+  Switch,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -39,7 +40,16 @@ import {
   StackedBarChart,
 } from 'react-native-chart-kit';
 import {Input} from '../../components';
+import socket from '../../api/socket'
+
 export function MyStore({navigation}) {
+
+
+  socket.on("LOAD_STORE", function () {
+    loadingStore()
+  });
+
+
   const [productInMyStore, setProductInMyStore] = useState('1');
   const [tab, setTab] = useState(1);
   const [subTab, setSubTab] = useState(1);
@@ -48,6 +58,7 @@ export function MyStore({navigation}) {
   const [product, setProduct] = useState(null);
   const [orders, setOrders] = useState([]);
   const [status, setStatus] = useState('Chờ xác nhận');
+  const [isEnabled, setIsEnabled] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalUpdateStoreVisible, setModalUpdateStoreVisible] = useState(false);
@@ -127,6 +138,7 @@ export function MyStore({navigation}) {
       const fetchData = async () => {
         const pr = await findStoreByUserId({userId});
         setStore(pr);
+        setIsEnabled(pr.status);
         setName(pr.name);
         setDescription(pr.description);
         setPhone(pr.phone);
@@ -302,6 +314,29 @@ export function MyStore({navigation}) {
     setRefreshing(false);
   };
 
+  const OnOffSwitch = () => {
+    const toggleSwitch = async () => {
+      setIsEnabled(previousState => !previousState);
+      const storeId = store._id;
+      await updateStore({storeId,status:isEnabled})
+    };
+
+    return (
+      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        <Switch
+          trackColor={{false: '#red', true: '#81b0ff'}}
+          thumbColor={isEnabled ? COLOR.MAIN : '#f4f3f4'}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={toggleSwitch}
+          value={isEnabled}
+        />
+        <Text style={{marginLeft: 10, color: COLOR.WHITE}}>
+          {isEnabled ? 'On' : 'Off'}
+        </Text>
+      </View>
+    );
+  };
+
   const renderHeader = () => {
     return (
       <ImageBackground
@@ -350,10 +385,11 @@ export function MyStore({navigation}) {
           <Image source={{uri: store.image}} style={styles.image} />
           <View style={{width: width * 0.5}}>
             <Text style={{color: COLOR.WHITE, fontSize: 20}}>{name}</Text>
-            {store.status && <Text style={{color: COLOR.WHITE}}>Mở cửa</Text>}
-            {store.status != true && (
+            {/* {store.status && <Text style={{color: COLOR.WHITE}}>Mở cửa</Text>} */}
+            {/* {store.status != true && (
               <Text style={{color: COLOR.WHITE}}>Đóng cửa</Text>
-            )}
+            )} */}
+            <OnOffSwitch />
             <View style={{flexDirection: 'row'}}>
               <Icon name="star" size={20} color={COLOR.YELLOW} />
               <Icon name="star" size={20} color={COLOR.YELLOW} />
@@ -824,12 +860,12 @@ export function MyStore({navigation}) {
         ],
       };
       const chartConfig = {
-        backgroundColor: '#e26a00',
-        backgroundGradientFrom: '#fb8c00',
-        backgroundGradientTo: '#ffa726',
+        backgroundColor: '#0000FF',
+        backgroundGradientFrom: '#FFFFFF',
+        backgroundGradientTo: '#FFFFFF',
         decimalPlaces: 0, // optional, defaults to 2dp
-        color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-        labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+        color: (opacity = 1) => `rgba(0, 0, 255, 0.8)`,
+        labelColor: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
         style: {
           borderRadius: 16,
         },
@@ -1050,9 +1086,10 @@ export function MyStore({navigation}) {
             }}>
             <TouchableOpacity
               style={styles.btnCancel}
-              onPress={() =>
-                navigation.navigate('UpdateProduct', {data: itemSelected})
-              }>
+              onPress={() => {
+                setModalVisible(false);
+                navigation.navigate('UpdateProduct', {data: itemSelected});
+              }}>
               <Text style={styles.txtInBtn}>Sửa</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -1190,10 +1227,8 @@ export function MyStore({navigation}) {
               <TouchableOpacity
                 style={styles.btnCancel}
                 onPress={async () => {
-                  await loadingStore()
-                    setModalUpdateStoreVisible(false);
-               
-                  
+                  await loadingStore();
+                  setModalUpdateStoreVisible(false);
                 }}>
                 <Text style={styles.txtInBtn}>Hủy</Text>
               </TouchableOpacity>

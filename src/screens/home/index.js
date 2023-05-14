@@ -22,11 +22,20 @@ import {data} from '../../data/data';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {User, Key} from '../../icons';
 const {width, height} = Dimensions.get('window');
-import {getStores} from '../../api';
+import {getStores, calculateDelivery} from '../../api';
 import axios from 'axios';
-import Slider from '../../components/slide'; '../../components/slide/index';
+import Slider from '../../components/slide';
+('../../components/slide/index');
+import socket from '../../api/socket';
 
 export function Home({route, navigation}) {
+  socket.on('LOAD_CART', function () {
+    AsyncStorage.getItem('cart').then(result => {
+      console.log('resurl', JSON.parse(result));
+      setCart(JSON.parse(result));
+    });
+  });
+
   const [product, setProduct] = useState([]);
   const [stores, setStores] = useState([]);
   const [cart, setCart] = useState([]);
@@ -50,7 +59,7 @@ export function Home({route, navigation}) {
       console.log('resurl', JSON.parse(result));
       setCart(JSON.parse(result));
     });
-  }, [reset]);
+  }, []);
   useEffect(() => {
     AsyncStorage.getItem('user').then(result => {
       console.log(result);
@@ -174,46 +183,91 @@ export function Home({route, navigation}) {
     );
   }
 
-  const calculateDeliveryPrice = async (userAddress, storeAddress) => {
-    // let travelDistance = 1;
-    
-      try {
-        const apiKey =
-          'Amn9jc6ebY9SAWGjrWUkv4SIPBGtADQQjxfJmsxmYzAeqCxkS4VMGVyDn1upfyiY';
+  // const calculateDeliveryPrice = async (userAddress, storeAddress) => {
+  //   // let travelDistance = 1;
 
-        const userAddressReplace = userAddress
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '');
-        const storeAddressReplace = storeAddress
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '');
-        const response = (await axios.get(
-          `http://dev.virtualearth.net/REST/V1/Routes/Driving?wp.0=${userAddressReplace}%2Cwa&wp.1=${storeAddressReplace}%2Cwa&avoid=minimizeTolls&key=${apiKey}`,
-        )).data.resourceSets[0].resources[0].travelDistance
-    //    console.log("(response) ======",response);
-          return response;
-          
-        // const resources = response.data.resourceSets[0].resources;
-        // travelDistance = resources[0].travelDistance;
-        //  console.log('Khoang cach', travelDistance);
-      } catch (error) {
-        console.log(error);
-        return 0
-      }
-    
+  //     try {
+  //       const apiKey =
+  //         'Amn9jc6ebY9SAWGjrWUkv4SIPBGtADQQjxfJmsxmYzAeqCxkS4VMGVyDn1upfyiY';
+
+  //       const userAddressReplace = userAddress
+  //         .normalize('NFD')
+  //         .replace(/[\u0300-\u036f]/g, '');
+  //       const storeAddressReplace = storeAddress
+  //         .normalize('NFD')
+  //         .replace(/[\u0300-\u036f]/g, '');
+  //       const response = (await axios.get(
+  //         `http://dev.virtualearth.net/REST/V1/Routes/Driving?wp.0=${userAddressReplace}%2Cwa&wp.1=${storeAddressReplace}%2Cwa&avoid=minimizeTolls&key=${apiKey}`,
+  //       )).data.resourceSets[0].resources[0].travelDistance
+  //   //    console.log("(response) ======",response);
+  //         return response;
+
+  //       // const resources = response.data.resourceSets[0].resources;
+  //       // travelDistance = resources[0].travelDistance;
+  //       //  console.log('Khoang cach', travelDistance);
+  //     } catch (error) {
+  //       console.log(error);
+  //       return 0
+  //     }
+
+  // };
+
+  const abc = async () => {
+    const userAddress =
+      '12 Nguyen van bao, phuong 4, go vap, thanh pho Ho chi minh';
+    const storeAddress =
+      '12 Nguyen van bao, phuong 4, go vap, thanh pho Ho chi minh';
+
+    let ak = await calculateDelivery({userAddress, storeAddress});
+    console.log('deliveryPrice', ak);
   };
 
   //Rendering
   function renderMyFoodsection(foods) {
     const renderItem = ({item, index}) => {
-      // let space = 0
-      // const newFunc = async () =>{
-      //  let ak = await calculateDeliveryPrice(user.address, item.address)
-      //  space = ak
-      //  }
-      //  newFunc()    
 
- //  console.log("deliveryPrice",deliveryPrice)
+      // const Abc = async () => {
+      //   const userAddress = user.address;
+      //   const storeAddress = item.address;
+      //   let ak = await calculateDelivery({userAddress, storeAddress});
+      //   console.log('deliveryPrice', ak);
+      //   return (
+      //     <View>
+      //       <Text>{ak}</Text>
+      //     </View>
+      //   );
+      // };
+
+      function DeliveryCalculator() {
+        const [deliveryPrice, setDeliveryPrice] = useState(null);
+      
+        useEffect(() => {
+          async function calculateDelivery1() {
+            const userAddress = user.address;
+            const storeAddress = item.address;
+            let ak = await calculateDelivery({userAddress, storeAddress});
+            console.log('deliveryPrice', ak);
+            setDeliveryPrice(ak);
+          }
+      
+          calculateDelivery1();
+        }, [user, item]);
+      
+        return (
+          <View>
+            {deliveryPrice && (
+              <Text
+              style={{
+                color: COLOR.lightGray,
+                flexWrap: 'wrap-reverse',
+                fontSize: 17,
+              }}
+              >{deliveryPrice.toFixed(2)} km</Text>
+            )}
+          </View>
+        );
+      }
+
       return (
         <TouchableOpacity
           style={{
@@ -257,38 +311,40 @@ export function Home({route, navigation}) {
               width: 150,
               height: 100,
             }}>
-            {item.tag && <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Image
-                source={icons.tag_icon}
-                resizeMode="contain"
-                style={{
-                  tintColor: 'red',
-                  width: 15,
-                  height: 15,
-                }}
-              />
-              <Text style={FONTS.tagNameItem}>{item.tag}</Text>
-            </View>}
+            {item.tag && (
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Image
+                  source={icons.tag_icon}
+                  resizeMode="contain"
+                  style={{
+                    tintColor: 'red',
+                    width: 15,
+                    height: 15,
+                  }}
+                />
+                <Text style={FONTS.tagNameItem}>{item.tag}</Text>
+              </View>
+            )}
             <View
               style={{
                 flexDirection: 'row',
                 // alignItems: 'center',
-               justifyContent: 'center',
+                justifyContent: 'center',
               }}>
-              <FontAwesome5 name="check-circle" size={20} color={COLOR.MAIN} style={{marginTop:2}} />
+              <FontAwesome5
+                name="check-circle"
+                size={20}
+                color={COLOR.MAIN}
+                style={{marginTop: 2}}
+              />
               <Text style={[FONTS.nameItem, {marginLeft: 10}]}>
                 {item.name}
               </Text>
             </View>
             <View style={{flexDirection: 'row'}}>
-              <Text
-                style={{
-                  color: COLOR.lightGray,
-                  flexWrap: 'wrap-reverse',
-                  fontSize: 17,
-                }}>
-                2.6 km
-              </Text>
+             
+                {<DeliveryCalculator/>}
+              
               <Text
                 style={{
                   color: COLOR.lightGray,
@@ -304,8 +360,6 @@ export function Home({route, navigation}) {
           </View>
         </TouchableOpacity>
       );
-    
-    
     };
     return (
       <View style={{flex: 1}}>
@@ -326,6 +380,38 @@ export function Home({route, navigation}) {
   function renderMyFoodsectionIntoColumn(foods) {
     const itemSize = width - 20;
     const renderItem = ({item, index}) => {
+
+
+      function DeliveryCalculator() {
+        const [deliveryPrice, setDeliveryPrice] = useState(null);
+      
+        useEffect(() => {
+          async function calculateDelivery1() {
+            const userAddress = user.address;
+            const storeAddress = item.address;
+            let ak = await calculateDelivery({userAddress, storeAddress});
+            console.log('deliveryPrice', ak);
+            setDeliveryPrice(ak);
+          }
+      
+          calculateDelivery1();
+        }, [user, item]);
+      
+        return (
+          <View>
+            {deliveryPrice && (
+              <Text
+              style={{
+                color: COLOR.lightGray,
+                flexWrap: 'wrap-reverse',
+                fontSize: 17,
+              }}
+              >{deliveryPrice.toFixed(2)} km</Text>
+            )}
+          </View>
+        );
+      }
+
       return (
         <TouchableOpacity
           style={{
@@ -369,37 +455,37 @@ export function Home({route, navigation}) {
               height: 100,
               marginLeft: 20,
             }}>
-            {item.tag && <View style={{flexDirection: 'row', alignItems: 'center'}}>
-              <Image
-                source={icons.tag_icon}
-                resizeMode="contain"
-                style={{
-                  tintColor: 'red',
-                  width: 15,
-                  height: 15,
-                }}
-              />
-              <Text style={FONTS.tagNameItem}>{item.tag}</Text>
-            </View>}
+            {item.tag && (
+              <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Image
+                  source={icons.tag_icon}
+                  resizeMode="contain"
+                  style={{
+                    tintColor: 'red',
+                    width: 15,
+                    height: 15,
+                  }}
+                />
+                <Text style={FONTS.tagNameItem}>{item.tag}</Text>
+              </View>
+            )}
             <View
               style={{
                 flexDirection: 'row',
                 // alignItems: 'center',
                 justifyContent: 'center',
               }}>
-              <FontAwesome5 name="check-circle" size={20} color={COLOR.MAIN} style={{marginTop:2}} />
+              <FontAwesome5
+                name="check-circle"
+                size={20}
+                color={COLOR.MAIN}
+                style={{marginTop: 2}}
+              />
               <Text style={[FONTS.nameItem, {marginLeft: 10}]}>
                 {item.name}
               </Text>
             </View>
-            <Text
-              style={{
-                color: COLOR.lightGray,
-                flexWrap: 'wrap-reverse',
-                fontSize: 17,
-              }}>
-              1.3 km
-            </Text>
+            {<DeliveryCalculator/>}
           </View>
         </TouchableOpacity>
       );
@@ -456,7 +542,7 @@ export function Home({route, navigation}) {
     return (
       <FlatList
         showsHorizontalScrollIndicator={false}
-         onViewableItemsChanged={onViewableItemsChangedHandler}
+        onViewableItemsChanged={onViewableItemsChangedHandler}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
         viewabilityConfig={{
           itemVisiblePercentThreshold: 50,
@@ -518,7 +604,9 @@ export function Home({route, navigation}) {
             alignItems: 'center',
           }}>
           <TouchableOpacity
-          onPress={() =>{navigation.navigate("SearchStore")}}
+            onPress={() => {
+              navigation.navigate('SearchStore');
+            }}
             style={{
               width: width * 0.7,
               backgroundColor: COLOR.lightGray5,
@@ -552,7 +640,6 @@ export function Home({route, navigation}) {
               style={{width: 40}}
               onPress={() => {
                 navigation.navigate('Cart');
-                setReset(!reset)
               }}>
               <Icon name="shoppingcart" size={35} color={COLOR.BLACK} />
               <View
@@ -571,18 +658,17 @@ export function Home({route, navigation}) {
               </View>
             </TouchableOpacity>
             <TouchableOpacity
-               onPress={() => {
+              onPress={() => {
                 navigation.navigate('AddressPicker');
-              }}
-            >
+              }}>
               <Icon name="message1" size={28} color={COLOR.BLACK} />
             </TouchableOpacity>
           </View>
         </View>
         <ScrollView style={{marginTop: 0, flex: 1}}>
           <View style={{height: 170}}>
-          <Slider></Slider>
-        </View>
+            <Slider></Slider>
+          </View>
           {/* <View style={{flex:3, backgroundColor: COLOR.WHITE}}>
           {CarouselAutoScroll(data, 3000)}
         </View> */}

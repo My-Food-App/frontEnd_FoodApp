@@ -20,7 +20,7 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import {Input} from '../../components';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {updateProduct} from '../../api';
+import {updateProduct,getCategories} from '../../api';
 const {width, height} = Dimensions.get('window');
 export function UpdateProduct({navigation, route}) {
   const [product, setProduct] = useState(null);
@@ -29,6 +29,8 @@ export function UpdateProduct({navigation, route}) {
   const [price, setPrice] = useState(0);
   const [imageUri, setImageUri] = useState('');
   const [discount, setDiscount] = useState(0);
+  const [categories, setCategories] = useState([]);
+  const [category, setCategory] = useState('');
   useEffect(() => {
     let {data} = route.params;
     setProduct(data);
@@ -37,14 +39,23 @@ export function UpdateProduct({navigation, route}) {
     setPrice(data.price)
     setDiscount(data.discount)
     setImageUri(data.image)
+    setCategory(data.category)
   }, [product]);
   console.log('Product ======', product);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const pr = await getCategories();
+      setCategories(pr);
+    };
+    fetchData();
+  }, []);
 
   const handleUpdateProduct = () => {
     console.log('Update Product');
     const id = product._id
     const image = imageUri
-    updateProduct({id,name,description,price,discount,image}).then(() => {
+    updateProduct({id,name,description,price,discount,image,category}).then(() => {
       navigation.goBack()
     })
   };
@@ -171,6 +182,63 @@ export function UpdateProduct({navigation, route}) {
       </View>
     );
   };
+
+  const DropdownComponent2 = ({data, setStyle}) => {
+    const [value, setValue] = useState(null);
+    const [isFocus, setIsFocus] = useState(false);
+
+    const renderLabel = () => {
+      if (value || isFocus) {
+        return (
+          <Text
+            style={[
+              styles.label,
+              isFocus && {fontSize: 18, fontWeight: '400', color: COLOR.BLACK},
+            ]}>
+            Chọn
+          </Text>
+        );
+      }
+      return null;
+    };
+
+    return (
+      <View style={styles.container}>
+        {renderLabel()}
+        <Dropdown
+          style={[setStyle, isFocus && {borderColor: 'blue'}]}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          inputSearchStyle={styles.inputSearchStyle}
+          iconStyle={styles.iconStyle}
+          data={data}
+          search
+          maxHeight={300}
+          labelField="name"
+          valueField="name"
+          placeholder={!isFocus ? 'Chọn' : '...'}
+          searchPlaceholder="Search..."
+          value={category}
+          onFocus={() => setIsFocus(true)}
+          onBlur={() => setIsFocus(false)}
+          onChange={item => {
+            setCategory(item.name);
+            setIsFocus(false);
+          }}
+          renderLeftIcon={() => (
+            <AntDesign
+              style={styles.icon}
+              color={isFocus ? 'blue' : 'black'}
+              name="Safety"
+              size={20}
+            />
+          )}
+        />
+      </View>
+    );
+  };
+
+
   function renderCotent() {
     return (
       <ScrollView
@@ -185,18 +253,10 @@ export function UpdateProduct({navigation, route}) {
             onChangeText={setName}
           />
         </View>
-        {/* <View style={styles.itemInContent}>
+        <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Loại sản phẩm:</Text>
-          <DropdownComponent data={data} setStyle={styles.dropdown} />
-        </View> */}
-        {/* <View style={styles.itemInContent}>
-          <Text style={styles.textTitle}>Số Lượng:</Text>
-          <Input
-            style={{marginTop: 10}}
-            placeholder="Số lượng..."
-            keyboardType="numeric"
-          />
-        </View> */}
+          <DropdownComponent2 data={categories} setStyle={styles.dropdownDisCount} />
+        </View>
         <View style={styles.itemInContent}>
           <Text style={styles.textTitle}>Giá:</Text>
           <Input

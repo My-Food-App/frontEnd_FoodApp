@@ -20,14 +20,15 @@ import {COLOR, SIZES} from '../../constants';
 import {createOrder, calculateDelivery, createPaymentIntent} from '../../api';
 import {useStripe} from '@stripe/stripe-react-native';
 const {width, height} = Dimensions.get('window');
-import {MyModal} from '../../components';
+import {Button, MyModal} from '../../components';
 import {Picker} from '@react-native-picker/picker';
+import socket from '../../api/socket';
 
 export function Order({navigation}) {
   const {initPaymentSheet, presentPaymentSheet} = useStripe();
 
   const [cart, setCart] = useState([]);
-  const [fee, setFee] = useState(20000);
+  const [fee, setFee] = useState(0);
   const [user, setUser] = useState(null);
   const [store, setStore] = useState(null);
   const [space, setSpace] = useState(0);
@@ -56,63 +57,61 @@ export function Order({navigation}) {
   const [newAddress, setNewAddress] = useState('');
   const [numberHouse, setNumberHouse] = useState('');
 
+  // for address
 
- // for address
+  useEffect(() => {
+    fetch(
+      'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/countries.json',
+    ) //eslint-disable-line
+      .then(response => response.json())
+      .then(responseJson => {
+        // this.setState({ dataCountries: Object.values(responseJson) });
+        setDataCountries(responseJson);
+        //  console.log('dataCountries', responseJson);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, []);
 
- useEffect(() => {
-  fetch(
-    'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/countries.json',
-  ) //eslint-disable-line
-    .then(response => response.json())
-    .then(responseJson => {
-      // this.setState({ dataCountries: Object.values(responseJson) });
-      setDataCountries(responseJson);
-      //  console.log('dataCountries', responseJson);
-    })
-    .catch(error => {
-      console.error(error);
-    });
-}, []);
+  useEffect(() => {
+    fetch(
+      'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/dist/tinh_tp.json',
+    ) //eslint-disable-line
+      .then(response => response.json())
+      .then(responseJson => {
+        setDataCities(Object.values(responseJson));
+        //      console.log('datacity', responseJson);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, []);
+  useEffect(() => {
+    fetch(
+      'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/dist/quan_huyen.json',
+    ) //eslint-disable-line
+      .then(response => response.json())
+      .then(responseJson => {
+        setDataCounties(Object.values(responseJson));
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, []);
 
-useEffect(() => {
-  fetch(
-    'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/dist/tinh_tp.json',
-  ) //eslint-disable-line
-    .then(response => response.json())
-    .then(responseJson => {
-      setDataCities(Object.values(responseJson));
-      //      console.log('datacity', responseJson);
-    })
-    .catch(error => {
-      console.error(error);
-    });
-}, []);
-useEffect(() => {
-  fetch(
-    'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/dist/quan_huyen.json',
-  ) //eslint-disable-line
-    .then(response => response.json())
-    .then(responseJson => {
-      setDataCounties(Object.values(responseJson));
-    })
-    .catch(error => {
-      console.error(error);
-    });
-}, []);
-
-useEffect(() => {
-  fetch(
-    'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/dist/xa_phuong.json',
-  ) //eslint-disable-line
-    .then(response => response.json())
-    .then(responseJson => {
-      setDataWards(Object.values(responseJson));
-    })
-    .catch(error => {
-      console.error(error);
-    });
-}, []);
-
+  useEffect(() => {
+    fetch(
+      'https://raw.githubusercontent.com/sunrise1002/hanhchinhVN/master/dist/xa_phuong.json',
+    ) //eslint-disable-line
+      .then(response => response.json())
+      .then(responseJson => {
+        setDataWards(Object.values(responseJson));
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, []);
 
   useEffect(() => {
     AsyncStorage.getItem('cart').then(result => {
@@ -195,9 +194,10 @@ useEffect(() => {
     const totalPrice = total + fee;
     const paymentMethod = methodPayment;
     const receiveAddress = store.address;
-    const deliveryAddress = newAddress!== '' ? newAddress : user.address ;
+    const deliveryAddress = newAddress !== '' ? newAddress : user.address;
     const created_date = new Date();
 
+    socket.emit('CHANGE_ORDER');
     await createOrder({
       userId,
       storeId,
@@ -211,14 +211,10 @@ useEffect(() => {
       deliveryAddress,
       created_date,
     }).then(() => {
-      
+      AsyncStorage.setItem('storeOrder', '{}');
       AsyncStorage.setItem('cart', '[]');
       setModalVisible(true);
-      setTimeout(() => {
-        setModalVisible(false);
-        navigation.navigate('Tabs');
-      }, 1500);
-      setNewAddress('')
+      setNewAddress('');
     });
   };
 
@@ -382,8 +378,8 @@ useEffect(() => {
           <TouchableOpacity
             onPress={() => {
               setNewAddress(numberHouse + ', ' + codeWards);
-             // handleUpdateAddress();
-             setModalAddressVisible(false)
+              // handleUpdateAddress();
+              setModalAddressVisible(false);
             }}
             style={{
               margin: 10,
@@ -483,13 +479,13 @@ useEffect(() => {
               {item.quantity}x
             </Text>
 
-            <Text
-              style={[
-                styles.txtStyle,
-                {fontSize: 20, fontWeight: '600', marginLeft: 20},
-              ]}>
-              {item.name}
-            </Text>
+            <View style={{marginLeft: 20}}>
+              <Text
+                style={[styles.txtStyle, {fontSize: 20, fontWeight: '600'}]}>
+                {item.name}
+              </Text>
+              {item.note && <Text>{item.note}</Text>}
+            </View>
           </View>
           <Text style={[styles.txtStyle, {fontSize: 16}]}>
             {currencyFormat(item.price - (item.price / 100) * item.discount)} ₫
@@ -530,37 +526,43 @@ useEffect(() => {
               </View>
               <Icon name="angle-right" size={25} color={COLOR.BLACK} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={()=>{
-              setModalAddressVisible(true);
-            }} style={styles.inforItemContainer}>
+            <TouchableOpacity
+              onPress={() => {
+                setModalAddressVisible(true);
+              }}
+              style={styles.inforItemContainer}>
               <View style={{flexDirection: 'row'}}>
                 <Icon name="map-marker-alt" size={25} color={COLOR.RED} />
-                {newAddress === '' && <View style={{marginLeft: 20}}>
-                  {user && (
-                    <Text
-                      style={[
-                        styles.txtStyle,
-                        {fontSize: 20, fontWeight: '600'},
-                      ]}>
-                      {user.address}
-                    </Text>
-                  )}
-                  {/* {space && <Text>Khoảng {space} Km</Text>} */}
-                  <Text style={{fontSize: 16}}>{space} Km</Text>
-                </View>}
-                {newAddress !== '' && <View style={{marginLeft: 20}}>
-                  {user && (
-                    <Text
-                      style={[
-                        styles.txtStyle,
-                        {fontSize: 20, fontWeight: '600'},
-                      ]}>
-                      {newAddress}
-                    </Text>
-                  )}
-                  {/* {space && <Text>Khoảng {space} Km</Text>} */}
-                  <Text style={{fontSize: 16}}>{space} Km</Text>
-                </View>}
+                {newAddress === '' && (
+                  <View style={{marginLeft: 20}}>
+                    {user && (
+                      <Text
+                        style={[
+                          styles.txtStyle,
+                          {fontSize: 20, fontWeight: '600'},
+                        ]}>
+                        {user.address}
+                      </Text>
+                    )}
+                    {/* {space && <Text>Khoảng {space} Km</Text>} */}
+                    <Text style={{fontSize: 16}}>{space} Km</Text>
+                  </View>
+                )}
+                {newAddress !== '' && (
+                  <View style={{marginLeft: 20}}>
+                    {user && (
+                      <Text
+                        style={[
+                          styles.txtStyle,
+                          {fontSize: 20, fontWeight: '600'},
+                        ]}>
+                        {newAddress}
+                      </Text>
+                    )}
+                    {/* {space && <Text>Khoảng {space} Km</Text>} */}
+                    <Text style={{fontSize: 16}}>{space} Km</Text>
+                  </View>
+                )}
               </View>
               {/* <Icon name="angle-right" size={25} color={COLOR.BLACK} /> */}
             </TouchableOpacity>
@@ -655,6 +657,7 @@ useEffect(() => {
   }
   const handleOrder = async () => {
     // let [userId,storeId,name,products,shippingfee,totalPrice]  = [user._id,store._id,user.name,cart,fee,total+fee]
+    socket.emit('ADD_ITEM_INTO_CART');
     if (methodPayment == 'Thanh toán khi nhận hàng') {
       const userId = user._id;
       const storeId = store._id;
@@ -662,11 +665,12 @@ useEffect(() => {
       const products = cart;
       const shippingfee = fee;
       const totalPrice = total + fee;
-     // const paymentMethod = methodPayment;
+      // const paymentMethod = methodPayment;
       const receiveAddress = store.address;
-      const deliveryAddress = newAddress!== '' ? newAddress : user.address ;
+      const deliveryAddress = newAddress !== '' ? newAddress : user.address;
       const created_date = new Date();
 
+      socket.emit('CHANGE_ORDER');
       await createOrder({
         userId,
         storeId,
@@ -677,16 +681,12 @@ useEffect(() => {
         navigation,
         receiveAddress,
         deliveryAddress,
-        created_date
+        created_date,
       }).then(() => {
         setModalVisible(true);
-        
-        setTimeout(() => {
-          setModalVisible(false);
-          navigation.navigate('Tabs');
-        }, 5000);
-        setNewAddress('')
+        setNewAddress('');
       });
+      AsyncStorage.setItem('storeOrder', '{}');
       AsyncStorage.setItem('cart', '[]');
     } else if (methodPayment == 'Thẻ Visa/MasterCard') {
       if (total + fee >= 23000) {
@@ -728,8 +728,8 @@ useEffect(() => {
         }}>
         <View
           style={{
-            height: 100,
-            width: 210,
+            height: 150,
+            width: 220,
             backgroundColor: COLOR.WHITE,
             borderRadius: 14,
             shadowColor: '#000',
@@ -755,6 +755,24 @@ useEffect(() => {
               Đặt đơn thành công
             </Text>
           </View>
+          <TouchableOpacity
+          onPress={() =>{
+            setModalVisible(false)
+            navigation.navigate('Tabs');
+          }}
+            style={{
+              height: 40,
+              width: 70,
+              alignSelf: 'center',
+              borderColor: COLOR.MAIN,
+              borderWidth: 1,
+              borderRadius: 10,
+              marginBottom: 10,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            <Text style={{color: COLOR.BLUE, fontSize: 20}}>Ok</Text>
+          </TouchableOpacity>
         </View>
       </MyModal>
     );

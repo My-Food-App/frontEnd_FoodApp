@@ -10,14 +10,14 @@ import {
   StyleSheet,
   TextInput,
   Alert,
-  RefreshControl 
+  RefreshControl,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
-import {getUsers} from '../../api';
+import {getUsers,searchAccount} from '../../api';
 const {width, height} = Dimensions.get('window');
 
 export function ManagerAccount({navigation}) {
@@ -25,7 +25,9 @@ export function ManagerAccount({navigation}) {
   const [accounts, setAccounts] = useState([]);
   const [accountsWithRole, setAccountsWithRole] = useState([]);
   const [role, setRole] = useState('user');
-
+  const [searchModalVisiable, setSearchModalVisiable] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const [accountsSearch, setAccountsSearch] = useState([]);
   useEffect(() => {
     const fetchData = async () => {
       const pr = await getUsers();
@@ -33,14 +35,33 @@ export function ManagerAccount({navigation}) {
     };
     fetchData();
   }, [role]);
-  console.log('ACCOUNT ==========', accounts);
 
   useEffect(() => {
+    const fetchData = async () => {
+      
+      const pr = await searchAccount({keyWord:searchValue});
+      setAccountsSearch(pr);
+    };
+    fetchData();
+  }, [searchValue]);
+
+ // console.log('ACCOUNT ==========', accounts);
+ console.log('ACCOUNTSearch ==========', accountsSearch);
+
+  useEffect(() => {
+   if(accountsSearch){
+    setAccountsWithRole(accountsSearch.filter(checkRole));
+    function checkRole(item) {
+      return item.role == role;
+    }
+   }
+   else{
     setAccountsWithRole(accounts.filter(checkRole));
     function checkRole(item) {
       return item.role == role;
     }
-  }, [accounts, role]);
+  }
+  }, [accounts, role,accountsSearch]);
 
   function renderHeader() {
     return (
@@ -119,7 +140,6 @@ export function ManagerAccount({navigation}) {
       setAccounts(pr);
     };
     fetchData();
-   
   };
 
   const onRefresh = async () => {
@@ -127,7 +147,6 @@ export function ManagerAccount({navigation}) {
     await loadData();
     setRefreshing(false);
   };
-
 
   const renderUser = data => {
     const itemSize = width - 20;
@@ -200,14 +219,40 @@ export function ManagerAccount({navigation}) {
   return (
     <View style={styles.container}>
       {renderHeader()}
+
       <View style={{height: 50}}>{renderTabs()}</View>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}  
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }    
+      <TouchableOpacity
+        style={{zIndex: 10}}
+        onPress={() => {
+          setSearchModalVisiable(!searchModalVisiable);
+        }}>
+        <Ionicons
+          name="search"
+          size={40}
+          style={styles.findIcon}
+          color={COLOR.BLACK}
+        />
+      </TouchableOpacity>
+      {searchModalVisiable && (
+        <View style={styles.searchContainer}>
+          <TextInput 
+          style={styles.search}
+          placeholder="Nhập tên, email, số điện thoại ..." 
+          value={searchValue}
+          onChangeText={setSearchValue}
+          />
+        </View>
+      )}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        //  refreshControl={
+        //   <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        // }
       >
         {renderUser(accountsWithRole)}
       </ScrollView>
+
       {subTab == 2 && (
         <TouchableOpacity
           onPress={() => {
@@ -255,4 +300,20 @@ const styles = StyleSheet.create({
     bottom: 10,
     right: 10,
   },
+  findIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+  },
+  searchContainer: {
+    height: 70,
+    justifyContent: 'center',
+  },
+  search:{
+    marginLeft:10,
+    borderRadius:10,
+    borderWidth:1,
+    width:300,
+    fontSize:18
+  }
 });

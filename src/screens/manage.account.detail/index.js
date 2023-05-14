@@ -13,7 +13,7 @@ import { COLOR, SIZES, FONTS ,icons} from "../../constants";
 import {userInfor,data,dataActivities} from "../../data/data";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import moment from 'moment';
-import {deleteAccount} from '../../api';
+import {deleteAccount,updateAccount} from '../../api';
 const {width, height} = Dimensions.get('window');
 
 export const ManagerAccountDetail = ({navigation,route}) => {
@@ -29,8 +29,11 @@ export const ManagerAccountDetail = ({navigation,route}) => {
 
   const handleDelete = async () =>{
     const id = user._id
-    await deleteAccount({id}).then(() => {
-        navigation.navigate("AdminTabs")
+    // await deleteAccount({id}).then(() => {
+    //     navigation.navigate("AdminTabs")
+    // })
+    await updateAccount({id,status:'blocked'}).then(() => {
+      navigation.navigate("AdminTabs")
     })
   }
 
@@ -260,7 +263,7 @@ export const ManagerAccountDetail = ({navigation,route}) => {
       <TouchableOpacity 
         onPress={handleDelete}
         style={{justifyContent:'center',alignItems:'center',backgroundColor:COLOR.WHITE,marginVertical:20,height:60,width:150,borderWidth:1,borderColor:COLOR.RED,borderRadius:10,alignSelf:'center'}}>
-            <Text style={{color:'red',fontSize:20}}>Xóa tài khoản</Text>
+            <Text style={{color:'red',fontSize:20}}>Khóa tài khoản</Text>
         </TouchableOpacity>
     </ScrollView>
   );

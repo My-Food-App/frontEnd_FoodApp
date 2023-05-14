@@ -3,7 +3,7 @@ import { StyleSheet, Image } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { COLOR, SIZES, FONTS ,icons} from "../../constants";
-import {ManagerAccount,ManagerStore,User,Statistical} from "../index"
+import {ManagerAccount,ManagerStore,User,Statistical,ManageCategogy} from "../index"
 
 
 const Tab = createBottomTabNavigator();
@@ -37,7 +37,7 @@ export function AdminTabs() {
                         case "QL cửa hàng":
                             return (
                                 <Image
-                                    source={icons.notification_icon}
+                                    source={icons.store_icon}
                                     resizeMode="contain"
                                     style={{
                                         tintColor: tintColor,
@@ -47,10 +47,23 @@ export function AdminTabs() {
                                 />
                             )
 
+                            case "QL loại SP":
+                                return (
+                                    <Image
+                                        source={icons.category_icon}
+                                        resizeMode="contain"
+                                        style={{
+                                            tintColor: tintColor,
+                                            width: 25,
+                                            height: 25
+                                        }}
+                                    />
+                                )
+
                         case "Thống kê":
                             return (
                                 <Image
-                                    source={icons.store_icon}
+                                    source={icons.statistical_icon}
                                     resizeMode="contain"
                                     style={{
                                         tintColor: tintColor,
@@ -82,15 +95,19 @@ export function AdminTabs() {
              <Tab.Screen
                 name="QL cửa hàng"
                 component={ManagerStore}
-            />       
+            />   
+            <Tab.Screen
+                name="QL loại SP"
+                component={ManageCategogy}
+            />      
             <Tab.Screen
                 name="Thống kê"
                 component={Statistical}
             />
-             <Tab.Screen
+             {/* <Tab.Screen
                 name="Tôi"
                 component={User}
-            />
+            /> */}
         </Tab.Navigator>
 
 

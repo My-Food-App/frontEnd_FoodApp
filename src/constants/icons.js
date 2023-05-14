@@ -37,6 +37,8 @@ export const heart_icon = require("../../assets/icons/heart_icon.png");
 export const help_icon = require("../../assets/icons/help_icon.png");
 export const i_icon = require("../../assets/icons/i_icon.png");
 export const coupon_icon = require("../../assets/icons/coupon_icon.png");
+export const statistical_icon = require("../../assets/icons/statistical.png");
+export const category_icon = require("../../assets/icons/category.jpg");
 
 export default {
     card_icon,
@@ -77,5 +79,7 @@ export default {
     i_icon,
     heart_icon,
     help_icon,
-    coupon_icon
+    coupon_icon,
+    statistical_icon,
+    category_icon
 }

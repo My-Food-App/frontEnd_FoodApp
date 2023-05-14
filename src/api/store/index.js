@@ -105,9 +105,9 @@ export const deleteStore = async ({storeId}) => {
   });
   
 }
-export const updateStore = async ({storeId,name,description,tag,address,email,phone}) => {
+export const updateStore = async ({storeId,name,description,tag,address,email,phone,status}) => {
   let data = JSON.stringify({
-    name,description,tag,address,email,phone
+    name,description,tag,address,email,phone,status
   });
   
   let config = {

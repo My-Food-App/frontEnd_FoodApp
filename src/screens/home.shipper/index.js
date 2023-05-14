@@ -20,9 +20,9 @@ const {width, height} = Dimensions.get('window');
 export function HomeShipper({navigation}) {
   const [orders, setOrders] = useState([]);
   const [load, setLoad] = useState(true);
-  const choXacNhanStatus = orders.filter(checkStatus1);
+  const choLayStatus = orders.filter(checkStatus1);
   function checkStatus1(item) {
-    return item.status == 'Chờ xác nhận';
+    return item.status == 'Chờ lấy';
   }
 
   useEffect(() => {
@@ -107,7 +107,7 @@ export function HomeShipper({navigation}) {
       </View>
       <View style={{height:10,backgroundColor:COLOR.lightGray2}}></View>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        {orders && renderListOrder(choXacNhanStatus)}
+        {orders && renderListOrder(choLayStatus)}
       </ScrollView>
     </View>
   )

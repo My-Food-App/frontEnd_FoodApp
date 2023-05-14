@@ -10,7 +10,8 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  Switch
 } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -36,6 +37,27 @@ export function Notification() {
     return (
       <View style={{ flex:1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#0000ff" />
+      </View>
+    );
+  };
+  const [isEnabled, setIsEnabled] = useState(false);
+  const OnOffSwitch = () => {
+    
+  
+    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+  
+    return (
+      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+        <Switch
+          trackColor={{false: '#767577', true: '#81b0ff'}}
+          thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
+          ios_backgroundColor="#3e3e3e"
+          onValueChange={toggleSwitch}
+          value={isEnabled}
+        />
+        <Text style={{marginLeft: 10}}>
+          {isEnabled ? 'On' : 'Off'}
+        </Text>
       </View>
     );
   };
@@ -104,12 +126,14 @@ export function Notification() {
         justifyContent: 'center',
         alignItems: 'center',
       }}>
+        <OnOffSwitch/>
       <TouchableOpacity
         onPress={()=>{setIsSuccessful(true)}}
         style={{backgroundColor: COLOR.MAIN}}>
         <Text>Payment</Text>
         
       </TouchableOpacity>
+
       {isSuccessful && (
         <SuccessView message="Your action was successful!" onClose={handleClose} />
       )}
