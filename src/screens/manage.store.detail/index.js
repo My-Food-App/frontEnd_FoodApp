@@ -162,7 +162,7 @@ export function ManageStoreDetail({navigation,route}) {
               paddingVertical: 5,
               justifyContent: 'flex-end',
             }}>
-            <Text style={{color: COLOR.RED, fontSize: 20}}>Xóa</Text>
+            <Text style={{color: COLOR.RED, fontSize: 20}}>Khóa</Text>
           </TouchableOpacity>
         </View>
       </ImageBackground>

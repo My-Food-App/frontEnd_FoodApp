@@ -46,7 +46,20 @@ export function MyStore({navigation}) {
 
 
   socket.on("LOAD_STORE", function () {
+
     loadingStore()
+  });
+
+  socket.on("LOAD_ORDER", function () {
+    console.log('LOAD')
+    loaddingOrders()
+   
+  });
+
+  socket.on("LOAD_LIST_PRODUCT", function () {
+    console.log('LOAD')
+    loaddingProducts()
+   
   });
 
 
@@ -151,15 +164,9 @@ export function MyStore({navigation}) {
   }, [user]);
 
   useEffect(() => {
-    if (store) {
-      const storeId = store._id;
-      const fetchData = async () => {
-        const pr = await findProductByIdStore({storeId});
-        const orders = await getOrderByStoreId({storeId});
-        setProduct(pr);
-        setOrders(orders);
-      };
-      fetchData();
+    if(store){
+      loaddingOrders()
+    loaddingProducts()
     }
   }, [store]);
 
@@ -286,6 +293,16 @@ export function MyStore({navigation}) {
       fetchData();
     }
   };
+
+  const loaddingOrders = async () => {
+    if (store) {
+      const storeId = store._id;
+        const orders = await getOrderByStoreId({storeId});
+        setOrders(orders);
+
+    }
+  }
+
   // console.log('Store ==========>', store);
   // console.log('product ==========>', product);
   // console.log('orders ==========>', orders);
@@ -880,7 +897,7 @@ export function MyStore({navigation}) {
           <BarChart
             style={{marginVertical: 8, borderRadius: 16}}
             data={data}
-            width={500} // from react-native
+            width={400} // from react-native
             height={500}
             yAxisInterval={1} // optional, defaults to 1
             fromZero={true}
@@ -888,6 +905,7 @@ export function MyStore({navigation}) {
             verticalLabelRotation={90}
             showValuesOnTopOfBars={true}
             xLabelsOffset={-10}
+            yLabelsOffset={30}
           />
         </View>
       );
@@ -931,11 +949,11 @@ export function MyStore({navigation}) {
     };
     const chartConfig = {
       backgroundColor: '#e26a00',
-      backgroundGradientFrom: '#fb8c00',
-      backgroundGradientTo: '#ffa726',
+      backgroundGradientFrom: '#FFFFFF',
+      backgroundGradientTo: '#FFFFFF',
       decimalPlaces: 0, // optional, defaults to 2dp
-      color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+      color: (opacity = 1) => `rgba(0, 0, 128, ${opacity})`,
+      labelColor: (opacity = 1) => `rgba(0, 0, 128, ${opacity})`,
       style: {
         borderRadius: 16,
       },
@@ -950,7 +968,7 @@ export function MyStore({navigation}) {
         <BarChart
           style={{marginVertical: 8, borderRadius: 16}}
           data={data}
-          width={600} // from react-native
+          width={570} // from react-native
           height={500}
           yAxisInterval={1} // optional, defaults to 1
           fromZero={true}
@@ -958,6 +976,7 @@ export function MyStore({navigation}) {
           verticalLabelRotation={90}
           showValuesOnTopOfBars={true}
           xLabelsOffset={-10}
+          yLabelsOffset={30}
         />
       </View>
     );
@@ -1000,11 +1019,11 @@ export function MyStore({navigation}) {
     };
     const chartConfig = {
       backgroundColor: '#e26a00',
-      backgroundGradientFrom: '#fb8c00',
-      backgroundGradientTo: '#ffa726',
+      backgroundGradientFrom: '#FFFFFF',
+      backgroundGradientTo: '#FFFFFF',
       decimalPlaces: 0, // optional, defaults to 2dp
-      color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-      labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+      color: (opacity = 1) => `rgba(128, 0, 128, ${opacity})`,
+      labelColor: (opacity = 1) => `rgba(128, 0, 128, ${opacity})`,
       style: {
         borderRadius: 16,
       },
@@ -1019,7 +1038,7 @@ export function MyStore({navigation}) {
         <BarChart
           style={{marginVertical: 8, borderRadius: 16}}
           data={data}
-          width={600} // from react-native
+          width={570} // from react-native
           height={500}
           yAxisInterval={1} // optional, defaults to 1
           fromZero={true}
@@ -1027,6 +1046,7 @@ export function MyStore({navigation}) {
           verticalLabelRotation={90}
           showValuesOnTopOfBars={true}
           xLabelsOffset={-10}
+          yLabelsOffset={30}
         />
       </View>
     );
@@ -1360,7 +1380,8 @@ const styles = StyleSheet.create({
   },
   barChar: {
     flex: 1,
-    paddingHorizontal: 10,
+   // paddingHorizontal: 10,
+    marginHorizontal:20
   },
   title: {
     fontSize: 22,

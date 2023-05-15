@@ -21,6 +21,8 @@ import {Input} from '../../components';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {createProduct,getCategories} from '../../api';
+import socket from '../../api/socket';
+
 const {width, height} = Dimensions.get('window');
 export function CreateProduct({navigation, route}) {
   const [idStore, setIdStore] = useState(null);
@@ -49,6 +51,7 @@ export function CreateProduct({navigation, route}) {
 console.log("DISCOUNT======",discount)
 
   const handleCreateProduct = () => {
+    socket.emit('CHANGE_LIST_PRODUCT')
     console.log('Create Product');
     if(imageUri){
       const image = imageUri

@@ -98,7 +98,7 @@ export function OrderDetail({navigation, route}) {
   const handleReceiveOrder = async () => {
     if ((orderId, shipperId)) {
       const status = 'Đang giao';
-      await updateOrderById({orderId, status, shipperId}); 
+      await updateOrderById({orderId, status, shipperId});
       navigation.navigate('ShiperTabs');
       socket.emit('CHANGE_ORDER');
     }
@@ -165,7 +165,7 @@ export function OrderDetail({navigation, route}) {
         text: 'Có',
         onPress: async () => {
           const status = 'Đã hủy';
-          await updateOrderById({orderId, status}).then(() => {         
+          await updateOrderById({orderId, status}).then(() => {
             navigation.navigate('MyOrder');
             socket.emit('CHANGE_ORDER');
           });
@@ -185,19 +185,18 @@ export function OrderDetail({navigation, route}) {
         text: 'Có',
         onPress: async () => {
           const status = 'Đã hủy';
-          await updateOrderById({orderId, status}).then(() => {
-            navigation.goBack();
-            socket.emit('CHANGE_ORDER');
-          });
+          await updateOrderById({orderId, status});
+          navigation.goBack();
+          socket.emit('CHANGE_ORDER');
         },
       },
     ]);
   };
 
   const handlereceiveOrderForStore = async () => {
-    socket.emit('CHANGE_ORDER');
     const status = 'Chờ lấy';
     await updateOrderById({orderId, status}).then(() => navigation.goBack());
+    socket.emit('CHANGE_ORDER');
   };
 
   function currencyFormat(num) {

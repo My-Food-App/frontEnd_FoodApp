@@ -21,6 +21,7 @@ import {Input} from '../../components';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {updateProduct,getCategories} from '../../api';
+import socket from '../../api/socket';
 const {width, height} = Dimensions.get('window');
 export function UpdateProduct({navigation, route}) {
   const [product, setProduct] = useState(null);
@@ -52,6 +53,7 @@ export function UpdateProduct({navigation, route}) {
   }, []);
 
   const handleUpdateProduct = () => {
+    socket.emit('CHANGE_LIST_PRODUCT')
     console.log('Update Product');
     const id = product._id
     const image = imageUri
