@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import socket from '../../api/socket';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {getOrders} from '../../api';
 const {width, height} = Dimensions.get('window');
@@ -26,13 +26,27 @@ export function HomeShipper({navigation}) {
   }
 
   useEffect(() => {
-    const fetchData = async () => {
-      const pr = await getOrders();
-      setOrders(pr);
-    };
-    fetchData();
+    loadOrders();
   }, [load]);
   console.log("=======================================")
+
+  useEffect(() => {
+    socket.on("LOAD_ORDER", function () {
+      console.log('99999999999999999999')
+      loadOrders();
+    });
+
+  }, []);
+
+  const loadOrders = async () => {
+    const pr = await getOrders();
+    setOrders(pr);
+  };
+
+  function currencyFormat(num) {
+    return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+  }
+
   const renderListOrder = data => {
     const itemSize = width - 20;
     const renderItem = ({item, index}) => {
@@ -74,7 +88,7 @@ export function HomeShipper({navigation}) {
               justifyContent: 'center',
             }}>
             <Text style={FONTS.nameItem}>{item.name}</Text>
-            <Text style={FONTS.nameItem}>{item.totalPrice} ₫</Text>
+            <Text style={FONTS.nameItem}> {currencyFormat(item.totalPrice)} ₫</Text>
           </View>
         </TouchableOpacity>
       );
@@ -95,7 +109,7 @@ export function HomeShipper({navigation}) {
     );
   };
 
-  console.log("Order:",orders)
+  // console.log("Order:",orders)
   return (
     <View
       style={styles.container}>

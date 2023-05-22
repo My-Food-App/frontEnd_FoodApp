@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import socket from '../../api/socket';
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {getOrderByShipperId} from '../../api';
 
@@ -21,11 +21,11 @@ const {width, height} = Dimensions.get('window');
 export function OrderShiper({navigation}) {
   // const [userCurrent, setUserCurrent] = useState(null);
   const [shipperId, setShipperId] = useState(null);
-  const [orders, setOrders] = useState(null);
+  const [orders, setOrders] = useState([]);
   const [load, setLoad] = useState(true);
   const [subTab, setSubTab] = useState(3);
   const [status, setStatus] = useState('Đang giao');
-  const [orderWithStatus, setOrderWithStatus] = useState(null);
+  const [orderWithStatus, setOrderWithStatus] = useState([]);
 
   useEffect(() => {
     AsyncStorage.getItem('user').then(result => {
@@ -35,13 +35,24 @@ export function OrderShiper({navigation}) {
   }, []);
   useEffect(() => {
     if (shipperId) {
-      const fetchData = async () => {
-        const pr = await getOrderByShipperId({shipperId});
-        setOrders(pr);
-      };
-      fetchData();
+      loaddingOrder();
     }
-  }, [shipperId, load,subTab]);
+  }, [shipperId, load, subTab]);
+
+  useEffect(() => {
+    socket.on('LOAD_ORDER', function () {
+      if (shipperId) {
+        console.log('LOAD_ORDER IN SHIPPER ORDER');
+        loaddingOrder();
+      }
+    });
+  }, []);
+
+  const loaddingOrder = async () => {
+    const pr = await getOrderByShipperId({shipperId});
+    setOrders(pr);
+  };
+
   useEffect(() => {
     if (orders) {
       setOrderWithStatus(orders.filter(checkStatus1));
@@ -52,7 +63,11 @@ export function OrderShiper({navigation}) {
   }, [status, orders]);
 
   console.log('shipperId ====>', shipperId);
-  console.log('orders ====>', orders);
+  //  console.log('orders ====>', orders);
+
+  function currencyFormat(num) {
+    return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
+  }
 
   const renderOrders = () => {
     return (
@@ -82,7 +97,7 @@ export function OrderShiper({navigation}) {
             Chờ xác nhận
           </Text>
         </TouchableOpacity> */}
-       
+
         <TouchableOpacity
           onPress={() => {
             setSubTab(3);
@@ -191,7 +206,9 @@ export function OrderShiper({navigation}) {
               justifyContent: 'center',
             }}>
             <Text style={FONTS.nameItem}>{item.name}</Text>
-            <Text style={FONTS.nameItem}>{item.totalPrice} ₫</Text>
+            <Text style={FONTS.nameItem}>
+              {currencyFormat(item.totalPrice)} ₫
+            </Text>
           </View>
         </TouchableOpacity>
       );

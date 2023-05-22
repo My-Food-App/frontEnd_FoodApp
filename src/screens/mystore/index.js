@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/AntDesign';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 const {width, height} = Dimensions.get('window');
@@ -40,29 +41,11 @@ import {
   StackedBarChart,
 } from 'react-native-chart-kit';
 import {Input} from '../../components';
-import socket from '../../api/socket'
+import socket from '../../api/socket';
+import DatePicker from 'react-native-date-picker';
+import {Dropdown} from 'react-native-element-dropdown';
 
 export function MyStore({navigation}) {
-
-
-  socket.on("LOAD_STORE", function () {
-
-    loadingStore()
-  });
-
-  socket.on("LOAD_ORDER", function () {
-    console.log('LOAD')
-    loaddingOrders()
-   
-  });
-
-  socket.on("LOAD_LIST_PRODUCT", function () {
-    console.log('LOAD')
-    loaddingProducts()
-   
-  });
-
-
   const [productInMyStore, setProductInMyStore] = useState('1');
   const [tab, setTab] = useState(1);
   const [subTab, setSubTab] = useState(1);
@@ -71,7 +54,8 @@ export function MyStore({navigation}) {
   const [product, setProduct] = useState(null);
   const [orders, setOrders] = useState([]);
   const [status, setStatus] = useState('Chờ xác nhận');
-  const [isEnabled, setIsEnabled] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(true);
+  const [productInOrder, setProductInOrder] = useState([]);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [modalUpdateStoreVisible, setModalUpdateStoreVisible] = useState(false);
@@ -96,6 +80,11 @@ export function MyStore({navigation}) {
   const [ordersWithMonth10, setOrdersWithMonth10] = useState([]);
   const [ordersWithMonth11, setOrdersWithMonth11] = useState([]);
   const [ordersWithMonth12, setOrdersWithMonth12] = useState([]);
+  const [ordersWithMonth, setOrdersWithMonth] = useState([]);
+  const [dateTime, setDateTime] = useState(
+    moment(Date.now()).format('MM-YYYY'),
+  );
+  const [orderSuccess, setOrderSuccess] = useState([]);
   const [itemSelected, setItemSelected] = useState(null);
   function countTotal(accumulator, current) {
     return accumulator + current.totalPrice - current.shippingfee;
@@ -118,6 +107,8 @@ export function MyStore({navigation}) {
     navigation.navigate('MyStoreInfomation');
   };
 
+  console.log('DATE', dateTime);
+
   const handleDeleteProduct = async () => {
     Alert.alert('Thông báo', 'Bạn có chắc muốn xóa?', [
       {
@@ -137,6 +128,24 @@ export function MyStore({navigation}) {
       },
     ]);
   };
+
+  useEffect(() => {
+    socket.on('LOAD_STORE', function () {
+      loadingStore();
+    });
+  }, []);
+  useEffect(() => {
+    socket.on('LOAD_ORDER', function () {
+      console.log('LOAD_ORDER_In_MyStore');
+      loaddingOrders();
+    });
+  }, []);
+  useEffect(() => {
+    socket.on('LOAD_LIST_PRODUCT', function () {
+      console.log('LOAD2222');
+      loaddingProducts();
+    });
+  }, []);
 
   useEffect(() => {
     AsyncStorage.getItem('user').then(result => {
@@ -164,11 +173,11 @@ export function MyStore({navigation}) {
   }, [user]);
 
   useEffect(() => {
-    if(store){
-      loaddingOrders()
-    loaddingProducts()
+    if (store) {
+      loaddingOrders();
+      loaddingProducts();
     }
-  }, [store]);
+  }, [store, status]);
 
   useEffect(() => {
     setOrderWithStatus(orders.filter(checkStatus1));
@@ -178,66 +187,93 @@ export function MyStore({navigation}) {
   }, [status, orders]);
 
   useEffect(() => {
-    setOrdersWithMonth1(orders.filter(checkMonth1));
+    if (ordersWithMonth) {
+      const products = getAllProducts(ordersWithMonth);
+      let list = products.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+      }));
+      setProductInOrder(list);
+    }
+  }, [ordersWithMonth]);
+
+  useEffect(() => {
+    setOrderSuccess(orders.filter(checkStatus1));
+     function checkStatus1(item) {
+       return item.status == 'Đã giao';
+     }
+   }, [orders]);
+
+  useEffect(() => {
+    setOrdersWithMonth1(orderSuccess.filter(checkMonth1));
     function checkMonth1(item) {
       return moment(item.created_date).format('MM-YYYY') == '01-2023';
     }
 
-    setOrdersWithMonth2(orders.filter(checkMonth2));
+    setOrdersWithMonth2(orderSuccess.filter(checkMonth2));
     function checkMonth2(item) {
       return moment(item.created_date).format('MM-YYYY') == '02-2023';
     }
 
-    setOrdersWithMonth3(orders.filter(checkMonth3));
+    setOrdersWithMonth3(orderSuccess.filter(checkMonth3));
     function checkMonth3(item) {
       return moment(item.created_date).format('MM-YYYY') == '03-2023';
     }
 
-    setOrdersWithMonth4(orders.filter(checkMonth4));
+    setOrdersWithMonth4(orderSuccess.filter(checkMonth4));
     function checkMonth4(item) {
       return moment(item.created_date).format('MM-YYYY') == '04-2023';
     }
 
-    setOrdersWithMonth5(orders.filter(checkMonth5));
+    setOrdersWithMonth5(orderSuccess.filter(checkMonth5));
     function checkMonth5(item) {
       return moment(item.created_date).format('MM-YYYY') == '05-2023';
     }
 
-    setOrdersWithMonth6(orders.filter(checkMonth6));
+    setOrdersWithMonth6(orderSuccess.filter(checkMonth6));
     function checkMonth6(item) {
       return moment(item.created_date).format('MM-YYYY') == '06-2023';
     }
 
-    setOrdersWithMonth7(orders.filter(checkMonth7));
+    setOrdersWithMonth7(orderSuccess.filter(checkMonth7));
     function checkMonth7(item) {
       return moment(item.created_date).format('MM-YYYY') == '07-2023';
     }
 
-    setOrdersWithMonth8(orders.filter(checkMonth8));
+    setOrdersWithMonth8(orderSuccess.filter(checkMonth8));
     function checkMonth8(item) {
       return moment(item.created_date).format('MM-YYYY') == '08-2023';
     }
 
-    setOrdersWithMonth9(orders.filter(checkMonth9));
+    setOrdersWithMonth9(orderSuccess.filter(checkMonth9));
     function checkMonth9(item) {
       return moment(item.created_date).format('MM-YYYY') == '09-2023';
     }
 
-    setOrdersWithMonth10(orders.filter(checkMonth10));
+    setOrdersWithMonth10(orderSuccess.filter(checkMonth10));
     function checkMonth10(item) {
       return moment(item.created_date).format('MM-YYYY') == '10-2023';
     }
 
-    setOrdersWithMonth11(orders.filter(checkMonth11));
+    setOrdersWithMonth11(orderSuccess.filter(checkMonth11));
     function checkMonth11(item) {
       return moment(item.created_date).format('MM-YYYY') == '11-2023';
     }
 
-    setOrdersWithMonth12(orders.filter(checkMonth12));
+    setOrdersWithMonth12(orderSuccess.filter(checkMonth12));
     function checkMonth12(item) {
       return moment(item.created_date).format('MM-YYYY') == '12-2023';
     }
-  }, [status, orders]);
+  }, [orderSuccess]);
+
+  useEffect(() => {
+    setOrdersWithMonth(orderSuccess.filter(checkMonth));
+    function checkMonth(item) {
+      return moment(item.created_date).format('MM-YYYY') == dateTime;
+    }
+  },[dateTime,orderSuccess])
+
+  console.log('ordersWithMonth',ordersWithMonth)
 
   function currencyFormat(num) {
     return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
@@ -296,13 +332,95 @@ export function MyStore({navigation}) {
 
   const loaddingOrders = async () => {
     if (store) {
+      console.log('Loading ORDER-----');
       const storeId = store._id;
-        const orders = await getOrderByStoreId({storeId});
-        setOrders(orders);
-
+      const orders = await getOrderByStoreId({storeId});
+    //  console.log('Loading ORDER', orders);
+      setOrders(orders);
     }
+  };
+  const array = ['A', 'B', 'C', 'A', 'A', 'C'];
+
+  //  function convertArray(arr) {
+  //   let values = [];
+  //   let counts = [];
+  //   let countObj = {};
+  //   for (let i = 0; i < arr.length; i++) {
+  //     let val = arr[i];
+  //     if (!countObj[val]) {
+  //       countObj[val] = 1;
+  //       values.push(val);
+  //     } else {
+  //       countObj[val]++;
+  //     }
+  //   }
+  //   for (const key in countObj) {
+  //     counts.push(countObj[key]);
+  //   }
+  //   let result = [values, counts];
+  // return result;
+  // }
+
+  function processArray(array) {
+    const valueArray = [];
+    const countArray = {};
+
+    // Tính số lượng của từng giá trị trong mảng
+    array.forEach(value => {
+      if (countArray[value]) {
+        countArray[value]++;
+      } else {
+        countArray[value] = 1;
+      }
+    });
+
+    // Chuyển đổi object thành mảng chứa giá trị và số lượng
+    for (let value in countArray) {
+      valueArray.push(value);
+    }
+
+    // Sắp xếp giảm dần mảng chứa giá trị dựa trên số lượng
+    valueArray.sort((a, b) => countArray[b] - countArray[a]);
+
+    // Sắp xếp mảng số lượng giảm dần
+    const sortedCountArray = valueArray.map(value => countArray[value]);
+
+    // Trả về kết quả
+    return [valueArray, sortedCountArray];
   }
 
+  function getSortedNamesAndTotalQuantities(arr) {
+    const mergedArray = arr.flat();
+    const nameMap = mergedArray.reduce((map, item) => {
+      const {name, quantity} = item;
+      map.set(name, (map.get(name) || 0) + quantity);
+      return map;
+    }, new Map());
+
+    const sortedEntries = [...nameMap.entries()].sort((a, b) => b[1] - a[1]);
+
+    const names = sortedEntries.map(entry => entry[0]);
+    const totalQuantities = sortedEntries.map(entry => entry[1]);
+
+    return [names, totalQuantities];
+  }
+
+  function getAllProducts(array) {
+    const result = [];
+
+    array.forEach(item => {
+      item.products.forEach(product => {
+        result.push(product);
+      });
+    });
+
+    return result;
+  }
+  console.log(
+    'ARRAY ==========>',
+    getSortedNamesAndTotalQuantities(productInOrder),
+  );
+  // console.log('productInOrder ==========>', productInOrder);
   // console.log('Store ==========>', store);
   // console.log('product ==========>', product);
   // console.log('orders ==========>', orders);
@@ -335,7 +453,7 @@ export function MyStore({navigation}) {
     const toggleSwitch = async () => {
       setIsEnabled(previousState => !previousState);
       const storeId = store._id;
-      await updateStore({storeId,status:isEnabled})
+      await updateStore({storeId, status: isEnabled});
     };
 
     return (
@@ -869,10 +987,10 @@ export function MyStore({navigation}) {
 
       const sold = product.map(item => item.sold);
       const data = {
-        labels: nameProduct,
+        labels: getSortedNamesAndTotalQuantities(productInOrder)[0],
         datasets: [
           {
-            data: sold,
+            data: getSortedNamesAndTotalQuantities(productInOrder)[1],
           },
         ],
       };
@@ -1046,7 +1164,7 @@ export function MyStore({navigation}) {
           verticalLabelRotation={90}
           showValuesOnTopOfBars={true}
           xLabelsOffset={-10}
-          yLabelsOffset={30}
+          yLabelsOffset={20}
         />
       </View>
     );
@@ -1262,6 +1380,75 @@ export function MyStore({navigation}) {
     );
   };
 
+  const dataTime = [
+    {label: '01-2023', value: '01-2023'},
+    {label: '02-2023', value: '02-2023'},
+    {label: '03-2023', value: '03-2023'},
+    {label: '04-2023', value: '04-2023'},
+    {label: '05-2023', value: '05-2023'},
+    {label: '06-2023', value: '06-2023'},
+    {label: '07-2023', value: '07-2023'},
+    {label: '08-2023', value: '08-2023'},
+    {label: '09-2023', value: '09-2023'},
+    {label: '10-2023', value: '10-2023'},
+    {label: '11-2023', value: '11-2023'},
+    {label: '12-2023', value: '12-2023'},
+  ];
+  const DropdownComponent = ({data, setStyle}) => {
+    const [value, setValue] = useState(null);
+    const [isFocus, setIsFocus] = useState(false);
+
+    const renderLabel = () => {
+      if (value || isFocus) {
+        return (
+          <Text
+            style={[
+              styles.label,
+              isFocus && {fontSize: 18, fontWeight: '400', color: COLOR.BLACK},
+            ]}>
+            Chọn
+          </Text>
+        );
+      }
+      return null;
+    };
+
+    return (
+      <View style={styles.container}>
+        {renderLabel()}
+        <Dropdown
+          style={[setStyle, isFocus && {borderColor: 'blue'}]}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          inputSearchStyle={styles.inputSearchStyle}
+          iconStyle={styles.iconStyle}
+          data={data}
+          search
+          maxHeight={300}
+          labelField="label"
+          valueField="value"
+          placeholder={!isFocus ? 'Chọn' : '...'}
+          searchPlaceholder="Search..."
+          value={dateTime}
+          onFocus={() => setIsFocus(true)}
+          onBlur={() => setIsFocus(false)}
+          onChange={item => {
+            setDateTime(item.value);
+            setIsFocus(false);
+          }}
+          renderLeftIcon={() => (
+            <AntDesign
+              style={styles.icon}
+              color={isFocus ? 'blue' : 'black'}
+              name="Safety"
+              size={20}
+            />
+          )}
+        />
+      </View>
+    );
+  };
+
   if (store) {
     return (
       <View style={styles.container}>
@@ -1288,13 +1475,16 @@ export function MyStore({navigation}) {
           )}
           {tab == 3 && (
             <ScrollView>
+             
               <Text style={styles.title}>
-                Số lượng bán được theo từng sản phẩm
+                Số lượng từng sản phẩm bán được trong {dateTime}
               </Text>
+              <DropdownComponent data={dataTime} setStyle={styles.dropdownDisCount} />
               <ScrollView horizontal>{renderBarChart()}</ScrollView>
               <Text style={styles.title}>
                 Số lượng đơn đặt hàng theo từng tháng
               </Text>
+             
               <ScrollView horizontal>{renderBarChart2()}</ScrollView>
               <Text style={styles.title}>Doanh thu theo từng tháng</Text>
               <ScrollView horizontal>{renderBarChart3()}</ScrollView>
@@ -1380,8 +1570,8 @@ const styles = StyleSheet.create({
   },
   barChar: {
     flex: 1,
-   // paddingHorizontal: 10,
-    marginHorizontal:20
+    // paddingHorizontal: 10,
+    marginHorizontal: 20,
   },
   title: {
     fontSize: 22,
@@ -1428,5 +1618,16 @@ const styles = StyleSheet.create({
     paddingLeft: 40,
     paddingRight: 10,
     fontSize: 16,
+  },
+  dropdownDisCount: {
+    height: 60,
+    width: 200,
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    marginTop: 10,
+    marginLeft:10
   },
 });

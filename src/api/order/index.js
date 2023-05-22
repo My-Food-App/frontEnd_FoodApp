@@ -38,7 +38,7 @@ export const createOrder = async ({
   axios(config)
     .then(function (response) {
       console.log('order ====', JSON.stringify(response.data));
-      navigation.navigate('Tabs');
+   //   navigation.navigate('Tabs');
     })
     .catch(function (error) {
       console.log(error);

@@ -22,6 +22,7 @@ import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {addShipper} from '../../api';
 const {width, height} = Dimensions.get('window');
+import socket from '../../api/socket';
 
 export function CreateShipper({navigation}) {
 
@@ -34,6 +35,10 @@ export function CreateShipper({navigation}) {
 
     const handleCreateProduct = async () =>{
         await addShipper({username, password, email, fullname, phone}).then(() => navigation.goBack())
+       
+        setTimeout(() => {
+          socket.emit('ADD_SHIPPER');
+        }, 1000)
     }
 
     function renderHeader() {

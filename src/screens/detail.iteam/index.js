@@ -53,7 +53,6 @@ export const DetailItem = ({route, navigation}) => {
       console.log('resurl ======>', JSON.parse(result));
       setCart(JSON.parse(result));
       if (result == '[]') {
-        console.log('heloo===============================');
         setStoreIncart({});
       } else {
         AsyncStorage.getItem('storeOrder').then(result => {
@@ -292,6 +291,11 @@ export const DetailItem = ({route, navigation}) => {
         newCart.push(newData);
         console.log('addtoCart');
         setCart(newCart);
+        setModalVisible(true)
+        setTimeout(() => {
+           setModalVisible(false)
+           navigation.goBack();
+         }, 1500)
       }
     }
   };
@@ -311,6 +315,11 @@ export const DetailItem = ({route, navigation}) => {
         newCart.push(newData);
         console.log('addtoCart');
         setCart(newCart);
+        setModalVisible(true);
+        setTimeout(() => {
+          setModalVisible(false);
+          navigation.goBack();
+        }, 1500);
       }
     }
   };
@@ -396,11 +405,7 @@ export const DetailItem = ({route, navigation}) => {
                     'storeOrder',
                     JSON.stringify(storeOrder),
                   );
-                  setModalVisible(true)
-                   setTimeout(() => {
-                      setModalVisible(false)
-                      navigation.goBack();
-                    }, 1500)
+                 
                   //   timeoutId()
                   //  clearTimeout(timeoutId)
                 });
@@ -422,11 +427,7 @@ export const DetailItem = ({route, navigation}) => {
                             'storeOrder',
                             JSON.stringify(storeOrder),
                           );
-                          setModalVisible(true);
-                          setTimeout(() => {
-                            setModalVisible(false);
-                            navigation.goBack();
-                          }, 1500);
+                         
                           //  clearTimeout(timeoutId)
                         });
                       },

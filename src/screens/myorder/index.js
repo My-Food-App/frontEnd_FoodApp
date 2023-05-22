@@ -19,9 +19,7 @@ const {width, height} = Dimensions.get('window');
 import socket from '../../api/socket'
 export function MyOrder({navigation}) {
 
-  socket.on("LOAD_ORDER", function () {
-   loaddingOrder()
-  });
+  
 
   const [orders, setOrders] = useState([]);
   const [subTab, setSubTab] = useState(1);
@@ -36,7 +34,16 @@ export function MyOrder({navigation}) {
   }, []);
 
   useEffect(() => {
-    // const userId = "640f471dfe4f89fcac842a0f"
+   
+    if (user) {
+      socket.on("LOAD_ORDER", function () {
+        loaddingOrder()
+       });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    
     if (user) {
       loaddingOrder();
     }

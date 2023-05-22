@@ -97,10 +97,14 @@ export function OrderDetail({navigation, route}) {
   console.log('STORE =>>>>', store);
   const handleReceiveOrder = async () => {
     if ((orderId, shipperId)) {
+     
       const status = 'Đang giao';
       await updateOrderById({orderId, status, shipperId});
       navigation.navigate('ShiperTabs');
-      socket.emit('CHANGE_ORDER');
+     
+      setTimeout(() => {
+        socket.emit('CHANGE_ORDER');
+      }, 1000)
     }
   };
 
@@ -132,7 +136,9 @@ export function OrderDetail({navigation, route}) {
     const status = statusClone;
     await updateOrderById({orderId, status});
     setModalVisible(false);
-    socket.emit('CHANGE_ORDER');
+    setTimeout(() => {
+      socket.emit('CHANGE_ORDER');
+    }, 1000)
   };
 
   const handleCancelOrder = () => {
@@ -185,9 +191,13 @@ export function OrderDetail({navigation, route}) {
         text: 'Có',
         onPress: async () => {
           const status = 'Đã hủy';
-          await updateOrderById({orderId, status});
-          navigation.goBack();
-          socket.emit('CHANGE_ORDER');
+          await updateOrderById({orderId, status}).then(() => {
+            navigation.goBack()
+           
+          });
+          setTimeout(() => {
+            socket.emit('CHANGE_ORDER');
+          }, 1000)
         },
       },
     ]);
@@ -195,8 +205,14 @@ export function OrderDetail({navigation, route}) {
 
   const handlereceiveOrderForStore = async () => {
     const status = 'Chờ lấy';
-    await updateOrderById({orderId, status}).then(() => navigation.goBack());
-    socket.emit('CHANGE_ORDER');
+    await updateOrderById({orderId, status}).then(() => {
+      navigation.goBack()
+     
+    });
+    setTimeout(() => {
+      socket.emit('CHANGE_ORDER');
+    }, 1000)
+   
   };
 
   function currencyFormat(num) {
@@ -482,8 +498,7 @@ export function OrderDetail({navigation, route}) {
           {data.storeId == storeCurrent._id && (
             <View
               style={{flexDirection: 'row', justifyContent: 'space-around'}}>
-              {data.status === 'Chờ xác nhận' &&
-                data.userId == userCurrent._id && (
+              
                   <TouchableOpacity
                     onPress={handleCancelOrderForStore}
                     style={{
@@ -504,7 +519,6 @@ export function OrderDetail({navigation, route}) {
                       Từ chối
                     </Text>
                   </TouchableOpacity>
-                )}
 
               {data.status === 'Chờ xác nhận' &&
                 data.storeId == storeCurrent._id && (

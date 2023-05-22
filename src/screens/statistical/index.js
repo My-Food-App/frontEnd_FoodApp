@@ -30,7 +30,8 @@ import {
   ContributionGraph,
   StackedBarChart,
 } from 'react-native-chart-kit';
-
+import {Dropdown} from 'react-native-element-dropdown';
+import AntDesign from 'react-native-vector-icons/AntDesign';
 
 export function Statistical() {
 
@@ -39,7 +40,7 @@ export function Statistical() {
   const [orderSuccess, setOrderSuccess] = useState([]);
   const [listOrderId, setListOrderId] = useState([]);
 
-
+  const [ordersWithMonth, setOrdersWithMonth] = useState([]);
   const [usersWithMonth1, setUsersWithMonth1] = useState([]);
   const [usersWithMonth2, setUsersWithMonth2] = useState([]);
   const [usersWithMonth3, setUsersWithMonth3] = useState([]);
@@ -52,6 +53,10 @@ export function Statistical() {
   const [usersWithMonth10, setUsersWithMonth10] = useState([]);
   const [usersWithMonth11, setUsersWithMonth11] = useState([]);
   const [usersWithMonth12, setUsersWithMonth12] = useState([]);
+
+  const [dateTime, setDateTime] = useState(
+    moment(Date.now()).format('MM-YYYY'),
+  );
  
   // function convertArray(arr) {
   //   let values = [];
@@ -105,9 +110,9 @@ export function Statistical() {
   }, [orders]);
 
   useEffect(() => {
-    let list = orderSuccess.map(item => item.name)
+    let list = ordersWithMonth.map(item => item.name)
     setListOrderId(list)
-   }, [orderSuccess]);
+   }, [ordersWithMonth]);
 
    useEffect(() => {
     setUsersWithMonth1(users.filter(checkMonth1));
@@ -171,6 +176,13 @@ export function Statistical() {
     }
   }, [users]);
 
+  useEffect(() => {
+    setOrdersWithMonth(orderSuccess.filter(checkMonth));
+    function checkMonth(item) {
+      return moment(item.created_date).format('MM-YYYY') == dateTime;
+    }
+  },[dateTime,orderSuccess])
+
   function countElements(arr) {
     let counts = {};
     for (let i = 0; i < arr.length; i++) {
@@ -186,8 +198,44 @@ export function Statistical() {
 
   if(listOrderId){
      let result = countElements(listOrderId);
- console.log("ARRAY: " + result[1]);
+// console.log("ARRAY: " + result[1]);
   }
+
+  function getTopThreeNamesWithTotalPrice(arr) {
+    const nameTotalMap = {};
+    
+    // Tính tổng totalPrice cho từng name
+    arr.forEach(item => {
+      if (nameTotalMap[item.name]) {
+        nameTotalMap[item.name] += item.totalPrice;
+      } else {
+        nameTotalMap[item.name] = item.totalPrice;
+      }
+    });
+    
+    // Sắp xếp các name theo tổng totalPrice giảm dần
+    const sortedNames = Object.keys(nameTotalMap).sort((a, b) => nameTotalMap[b] - nameTotalMap[a]);
+    
+    // Lấy 3 name có tổng totalPrice lớn nhất
+    const topThreeNames = sortedNames.slice(0, 3);
+    
+    // Tạo mảng chứa name và mảng chứa tổng totalPrice của name
+    const names = [];
+    const totalPrices = [];
+    
+    // Lấy tên và tổng totalPrice tương ứng với topThreeNames
+    topThreeNames.forEach(name => {
+      names.push(name);
+      totalPrices.push(nameTotalMap[name]);
+    });
+    
+    return [names, totalPrices];
+  }
+
+
+  const [names, totalPrices] = getTopThreeNamesWithTotalPrice(ordersWithMonth);
+  console.log('Names:', names);
+  console.log('Total Prices:', totalPrices);
 
   function renderHeader() {
     return (
@@ -205,7 +253,7 @@ export function Statistical() {
     );
   }
 
-  const renderHighestRevenueStore = () =>{
+  const renderHighestOrderOfStore = () =>{
 
       const data = {
         labels: countElements(listOrderId)[0],
@@ -250,6 +298,52 @@ export function Statistical() {
       );
  
   }
+
+  const renderHighestRevenueStore = () =>{
+
+    const data = {
+      labels: names,
+      datasets: [
+        {
+          data: totalPrices,
+        },
+      ],
+    };
+    const chartConfig = {
+      backgroundColor: "#e26a00",
+      backgroundGradientFrom: '#FFFFFF',
+      backgroundGradientTo: '#FFFFFF',
+      decimalPlaces: 0, // optional, defaults to 2dp
+      color: (opacity = 1) => `rgba(0, 0, 255, 0.8)`,
+      labelColor: (opacity = 1) => `rgba(0, 0, 255, ${opacity})`,
+      style: {
+        borderRadius: 16
+      },
+      propsForDots: {
+        r: "6",
+        strokeWidth: "2",
+        stroke: "#ffa726"
+      }
+    };
+    return (
+      <View style={styles.barChar}>
+        <BarChart
+          style={{marginVertical: 8, borderRadius: 16}}
+          data={data}
+          width={width-20} // from react-native
+          height={550}
+          yAxisInterval={1} // optional, defaults to 1
+          fromZero={true}
+          chartConfig={chartConfig}
+          verticalLabelRotation={90}
+          showValuesOnTopOfBars={true}
+          xLabelsOffset={-10}
+          yLabelsOffset={20}
+        />
+      </View>
+    );
+
+}
 
   const renderStatiscalUser = () =>{
 
@@ -310,11 +404,84 @@ export function Statistical() {
 
 }
 
+
+const dataTime = [
+  {label: '01-2023', value: '01-2023'},
+  {label: '02-2023', value: '02-2023'},
+  {label: '03-2023', value: '03-2023'},
+  {label: '04-2023', value: '04-2023'},
+  {label: '05-2023', value: '05-2023'},
+  {label: '06-2023', value: '06-2023'},
+  {label: '07-2023', value: '07-2023'},
+  {label: '08-2023', value: '08-2023'},
+  {label: '09-2023', value: '09-2023'},
+  {label: '10-2023', value: '10-2023'},
+  {label: '11-2023', value: '11-2023'},
+  {label: '12-2023', value: '12-2023'},
+];
+const DropdownComponent = ({data, setStyle}) => {
+  const [value, setValue] = useState(null);
+  const [isFocus, setIsFocus] = useState(false);
+
+  const renderLabel = () => {
+    if (value || isFocus) {
+      return (
+        <Text
+          style={[
+            styles.label,
+            isFocus && {fontSize: 18, fontWeight: '400', color: COLOR.BLACK},
+          ]}>
+          Chọn
+        </Text>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <View style={styles.container}>
+      {renderLabel()}
+      <Dropdown
+        style={[setStyle, isFocus && {borderColor: 'blue'}]}
+        placeholderStyle={styles.placeholderStyle}
+        selectedTextStyle={styles.selectedTextStyle}
+        inputSearchStyle={styles.inputSearchStyle}
+        iconStyle={styles.iconStyle}
+        data={data}
+        search
+        maxHeight={300}
+        labelField="label"
+        valueField="value"
+        placeholder={!isFocus ? 'Chọn' : '...'}
+        searchPlaceholder="Search..."
+        value={dateTime}
+        onFocus={() => setIsFocus(true)}
+        onBlur={() => setIsFocus(false)}
+        onChange={item => {
+          setDateTime(item.value);
+          setIsFocus(false);
+        }}
+        renderLeftIcon={() => (
+          <AntDesign
+            style={styles.icon}
+            color={isFocus ? 'blue' : 'black'}
+            name="Safety"
+            size={20}
+          />
+        )}
+      />
+    </View>
+  );
+};
+
   return (
     <ScrollView
       style={styles.container}>
         {renderHeader()}
       <Text style={styles.title}>Top 3 cửa hàng có nhiều đơn đặt hàng nhất</Text>
+      <DropdownComponent data={dataTime} setStyle={styles.dropdownDisCount} />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>{renderHighestOrderOfStore()}</ScrollView>
+      <Text style={styles.title}>Top 3 cửa hàng có doanh thu cao nhất</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>{renderHighestRevenueStore()}</ScrollView>
       <Text style={styles.title}>Số lượng tài khoản đăng ký trong 12 tháng</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>{renderStatiscalUser()}</ScrollView>
@@ -347,6 +514,17 @@ const styles = StyleSheet.create({
     marginTop:10,
     color:COLOR.BLACK,
     fontWeight:'700'
-  }
+  },
+  dropdownDisCount: {
+    height: 60,
+    width: 200,
+    borderColor: 'gray',
+    borderWidth: 0.5,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    marginTop: 10,
+    marginLeft:10
+  },
 });
 

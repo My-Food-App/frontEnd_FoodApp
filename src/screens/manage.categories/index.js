@@ -351,7 +351,9 @@ export function ManageCategogy() {
               <TouchableOpacity
                 onPress={async () => {
                   await onUpdateCategory();
-                  loadCategory();
+                  setTimeout(() => {
+                    loadCategory();
+                  }, 1500)
                 }}
                 style={styles.btnPost}>
                 <Text style={styles.txtInBtn}>Cập nhật</Text>

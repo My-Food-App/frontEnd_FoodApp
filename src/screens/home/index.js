@@ -29,13 +29,8 @@ import Slider from '../../components/slide';
 import socket from '../../api/socket';
 
 export function Home({route, navigation}) {
-  socket.on('LOAD_CART', function () {
-    AsyncStorage.getItem('cart').then(result => {
-      console.log('resurl', JSON.parse(result));
-      setCart(JSON.parse(result));
-    });
-  });
-
+ 
+  console.log('lll------------------------------------------------------------')
   const [product, setProduct] = useState([]);
   const [stores, setStores] = useState([]);
   const [cart, setCart] = useState([]);
@@ -43,9 +38,7 @@ export function Home({route, navigation}) {
   const [user, setUser] = useState(null);
   const [reset, setReset] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const a =
-    '141 Đường Nguyễn Thái Bình, Phường Nguyễn Thái Bình, Quận 1, Thành phố Hồ Chí Minh';
-  const b = '12 Nguyễn Văn Bảo, Phường 4, Quận Gò Vấp, thành phố Hồ Chí Minh';
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,57 +49,32 @@ export function Home({route, navigation}) {
   }, []);
   useEffect(() => {
     AsyncStorage.getItem('cart').then(result => {
-      console.log('resurl', JSON.parse(result));
+    if(result != null){
       setCart(JSON.parse(result));
+    }else{
+      AsyncStorage.setItem('cart', '[]');
+      setCart([]);
+    }
+     
     });
   }, []);
   useEffect(() => {
     AsyncStorage.getItem('user').then(result => {
-      console.log(result);
+      console.log('111111111',result);
       setUser(JSON.parse(result));
     });
   }, []);
-  //console.log("PRODUCT====",product);
-  // console.log(data);
 
-  // if(user){
-  //   if(user.address !== ""){
-  //       setModalVisible(true)
-  //   }else{
-  //     setModalVisible(false)
-  //   }
-  // }
+  useEffect(() => {
+    socket.on('LOAD_CART', function () {
+      AsyncStorage.getItem('cart').then(result => {
+        console.log('resurl--', JSON.parse(result));
+        setCart(JSON.parse(result));
+      });
+    });
+  }, []);
+ 
 
-  const dataTest = [
-    {
-      _id: '11111',
-      name: 'One',
-      price: 10000,
-      quantity: 4,
-      total: 40000,
-    },
-    {
-      _id: '21111',
-      name: 'Two',
-      price: 10000,
-      quantity: 2,
-      total: 20000,
-    },
-    {
-      _id: '21112',
-      name: 'three',
-      price: 10000,
-      quantity: 2,
-      total: 20000,
-    },
-    {
-      _id: '21141',
-      name: 'four',
-      price: 10000,
-      quantity: 2,
-      total: 20000,
-    },
-  ];
   //  AsyncStorage.setItem("cart",JSON.stringify(dataTest))
   // AsyncStorage.setItem("cart","[]")
   const types = [
@@ -183,90 +151,49 @@ export function Home({route, navigation}) {
     );
   }
 
-  // const calculateDeliveryPrice = async (userAddress, storeAddress) => {
-  //   // let travelDistance = 1;
 
-  //     try {
-  //       const apiKey =
-  //         'Amn9jc6ebY9SAWGjrWUkv4SIPBGtADQQjxfJmsxmYzAeqCxkS4VMGVyDn1upfyiY';
 
-  //       const userAddressReplace = userAddress
-  //         .normalize('NFD')
-  //         .replace(/[\u0300-\u036f]/g, '');
-  //       const storeAddressReplace = storeAddress
-  //         .normalize('NFD')
-  //         .replace(/[\u0300-\u036f]/g, '');
-  //       const response = (await axios.get(
-  //         `http://dev.virtualearth.net/REST/V1/Routes/Driving?wp.0=${userAddressReplace}%2Cwa&wp.1=${storeAddressReplace}%2Cwa&avoid=minimizeTolls&key=${apiKey}`,
-  //       )).data.resourceSets[0].resources[0].travelDistance
-  //   //    console.log("(response) ======",response);
-  //         return response;
-
-  //       // const resources = response.data.resourceSets[0].resources;
-  //       // travelDistance = resources[0].travelDistance;
-  //       //  console.log('Khoang cach', travelDistance);
-  //     } catch (error) {
-  //       console.log(error);
-  //       return 0
-  //     }
-
-  // };
-
-  const abc = async () => {
-    const userAddress =
-      '12 Nguyen van bao, phuong 4, go vap, thanh pho Ho chi minh';
-    const storeAddress =
-      '12 Nguyen van bao, phuong 4, go vap, thanh pho Ho chi minh';
-
-    let ak = await calculateDelivery({userAddress, storeAddress});
-    console.log('deliveryPrice', ak);
-  };
+  function DeliveryCalculator({item}) {
+    const [deliveryPrice, setDeliveryPrice] = useState(null);
+  
+    useEffect(() => {
+      async function calculateDelivery1() {
+        const userAddress = user.address;
+        const storeAddress = item.address;
+        let ak = await calculateDelivery({userAddress, storeAddress});
+      //  console.log('deliveryPrice----', ak);
+        setDeliveryPrice(ak);
+      }
+  
+      calculateDelivery1();
+    }, [user, item]);
+  
+    if(deliveryPrice){
+      return (
+        <View>
+          {deliveryPrice && (
+            <Text
+            style={{
+              color: COLOR.lightGray,
+              flexWrap: 'wrap-reverse',
+              fontSize: 17,
+            }}
+            >{deliveryPrice.toFixed(2)} km</Text>
+          )}
+        </View>
+      );
+    }
+    else {
+      return (<View></View>)
+    }
+  }
 
   //Rendering
   function renderMyFoodsection(foods) {
     const renderItem = ({item, index}) => {
 
-      // const Abc = async () => {
-      //   const userAddress = user.address;
-      //   const storeAddress = item.address;
-      //   let ak = await calculateDelivery({userAddress, storeAddress});
-      //   console.log('deliveryPrice', ak);
-      //   return (
-      //     <View>
-      //       <Text>{ak}</Text>
-      //     </View>
-      //   );
-      // };
 
-      function DeliveryCalculator() {
-        const [deliveryPrice, setDeliveryPrice] = useState(null);
-      
-        useEffect(() => {
-          async function calculateDelivery1() {
-            const userAddress = user.address;
-            const storeAddress = item.address;
-            let ak = await calculateDelivery({userAddress, storeAddress});
-            console.log('deliveryPrice', ak);
-            setDeliveryPrice(ak);
-          }
-      
-          calculateDelivery1();
-        }, [user, item]);
-      
-        return (
-          <View>
-            {deliveryPrice && (
-              <Text
-              style={{
-                color: COLOR.lightGray,
-                flexWrap: 'wrap-reverse',
-                fontSize: 17,
-              }}
-              >{deliveryPrice.toFixed(2)} km</Text>
-            )}
-          </View>
-        );
-      }
+    
 
       return (
         <TouchableOpacity
@@ -343,7 +270,14 @@ export function Home({route, navigation}) {
             </View>
             <View style={{flexDirection: 'row'}}>
              
-                {<DeliveryCalculator/>}
+                <DeliveryCalculator  item={item}/>
+                {/* <Text
+          style={{
+            color: COLOR.lightGray,
+            flexWrap: 'wrap-reverse',
+            fontSize: 17,
+          }}
+          >2.98 km</Text> */}
               
               <Text
                 style={{
@@ -381,36 +315,6 @@ export function Home({route, navigation}) {
     const itemSize = width - 20;
     const renderItem = ({item, index}) => {
 
-
-      function DeliveryCalculator() {
-        const [deliveryPrice, setDeliveryPrice] = useState(null);
-      
-        useEffect(() => {
-          async function calculateDelivery1() {
-            const userAddress = user.address;
-            const storeAddress = item.address;
-            let ak = await calculateDelivery({userAddress, storeAddress});
-            console.log('deliveryPrice', ak);
-            setDeliveryPrice(ak);
-          }
-      
-          calculateDelivery1();
-        }, [user, item]);
-      
-        return (
-          <View>
-            {deliveryPrice && (
-              <Text
-              style={{
-                color: COLOR.lightGray,
-                flexWrap: 'wrap-reverse',
-                fontSize: 17,
-              }}
-              >{deliveryPrice.toFixed(2)} km</Text>
-            )}
-          </View>
-        );
-      }
 
       return (
         <TouchableOpacity
@@ -485,7 +389,7 @@ export function Home({route, navigation}) {
                 {item.name}
               </Text>
             </View>
-            {<DeliveryCalculator/>}
+            {/* {<DeliveryCalculator/>} */}
           </View>
         </TouchableOpacity>
       );

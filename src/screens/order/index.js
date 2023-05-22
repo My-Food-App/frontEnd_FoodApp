@@ -17,7 +17,7 @@ import Fontisto from 'react-native-vector-icons/Fontisto';
 import {Dropdown} from 'react-native-element-dropdown';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {COLOR, SIZES} from '../../constants';
-import {createOrder, calculateDelivery, createPaymentIntent} from '../../api';
+import {createOrder, calculateDelivery, createPaymentIntent,getProductById,updateProduct,createNotification} from '../../api';
 import {useStripe} from '@stripe/stripe-react-native';
 const {width, height} = Dimensions.get('window');
 import {Button, MyModal} from '../../components';
@@ -152,6 +152,19 @@ export function Order({navigation}) {
   //   return accumulator + (current.price - (current.price / 100) * current.discount);
   // }
 
+  const handleSoldProduct = async ({id,quantity}) =>{
+    // const [product, setProduct] = useState(null)
+    const product = await getProductById({id})
+    const sold = product.sold + quantity;
+    await updateProduct({id,sold})
+
+  }
+  const handleSoldListProduct = async (array) =>{
+    for(let i=0; i<array.length; i++){
+      await handleSoldProduct({id:array[i]._id, quantity:array[i].quantity})
+    }
+  }
+
   function currencyFormat(num) {
     return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
   }
@@ -182,7 +195,8 @@ export function Order({navigation}) {
 
     // 3. Present the Payment Sheet from Stripe
 
-    await presentPaymentSheet();
+    const pay = await presentPaymentSheet();
+  console.log('Payment Sheet ====================', pay)    
 
     // 4. If payment ok -> create the order
 
@@ -198,6 +212,7 @@ export function Order({navigation}) {
     const created_date = new Date();
 
     socket.emit('CHANGE_ORDER');
+    
     await createOrder({
       userId,
       storeId,
@@ -215,6 +230,7 @@ export function Order({navigation}) {
       AsyncStorage.setItem('cart', '[]');
       setModalVisible(true);
       setNewAddress('');
+      socket.emit('ADD_ITEM_INTO_CART');
     });
   };
 
@@ -455,6 +471,19 @@ export function Order({navigation}) {
     );
   };
 
+  const handleCreateNotifi = async () => {
+    const userId = user._id;
+    const name = 'Đặt hàng thành công'
+    const value = 'Bạn đã đặt hàng thành công, đơn đặt hàng đả được gửi đến bên cung cấp sản phẩm'
+    const created_date = new Date();
+
+      await createNotification({name,value,userId,created_date})
+      setTimeout(() => {
+        socket.emit('ADD_NOTIFICATION');
+      }, 1000)
+    console.log('Created notification')
+  }
+
   function renderHeader() {
     return (
       <View style={styles.headerContainer}>
@@ -464,7 +493,9 @@ export function Order({navigation}) {
         <Text style={{fontSize: 20, color: COLOR.BLACK, fontWeight: '600'}}>
           Trang đặt hàng
         </Text>
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleCreateNotifi}  
+        >
           <Icon name="ellipsis-h" size={30} color={COLOR.BLACK} />
         </TouchableOpacity>
       </View>
@@ -657,7 +688,7 @@ export function Order({navigation}) {
   }
   const handleOrder = async () => {
     // let [userId,storeId,name,products,shippingfee,totalPrice]  = [user._id,store._id,user.name,cart,fee,total+fee]
-    socket.emit('ADD_ITEM_INTO_CART');
+   
     if (methodPayment == 'Thanh toán khi nhận hàng') {
       const userId = user._id;
       const storeId = store._id;
@@ -686,8 +717,10 @@ export function Order({navigation}) {
         setModalVisible(true);
         setNewAddress('');
       });
+      await handleSoldListProduct(cart)
       AsyncStorage.setItem('storeOrder', '{}');
       AsyncStorage.setItem('cart', '[]');
+      socket.emit('ADD_ITEM_INTO_CART');
     } else if (methodPayment == 'Thẻ Visa/MasterCard') {
       if (total + fee >= 23000) {
         onCheckout();
@@ -700,23 +733,25 @@ export function Order({navigation}) {
   };
 
   const renderFooter = () => {
-    return (
-      <View style={styles.footerContainer}>
-        <View style={styles.totalPriceContainer}>
-          <Text style={[styles.txtStyle, {fontSize: 18}]}>Tổng cộng</Text>
-          <Text style={[styles.txtStyle, {fontSize: 18, fontWeight: '600'}]}>
-            {currencyFormat(total + fee)} ₫
-          </Text>
+    if(space){
+      return (
+        <View style={styles.footerContainer}>
+          <View style={styles.totalPriceContainer}>
+            <Text style={[styles.txtStyle, {fontSize: 18}]}>Tổng cộng</Text>
+            <Text style={[styles.txtStyle, {fontSize: 18, fontWeight: '600'}]}>
+              {currencyFormat(total + fee)} ₫
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.btnOrderContainer}
+            onPress={handleOrder}>
+            <Text style={[{fontSize: 18, fontWeight: '700'}, styles.txtStyle]}>
+              Đặt đơn
+            </Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.btnOrderContainer}
-          onPress={handleOrder}>
-          <Text style={[{fontSize: 18, fontWeight: '700'}, styles.txtStyle]}>
-            Đặt đơn
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
+      );
+    }
   };
 
   const renderModal = () => {

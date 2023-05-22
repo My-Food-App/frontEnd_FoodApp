@@ -21,6 +21,9 @@ export const login = async ({username, password,navigation}) => {
       console.log('user',JSON.stringify(response.data.data));
       await AsyncStorage.setItem('user', JSON.stringify(response.data.data))
       .then(()=> {
+       if(response.data.data.status === 'blocked') {
+        Alert.alert("Tài khoản của bạn đã bị khóa")
+       }else{
         if(response.data.data.role=="user"){
           navigation.navigate("Tabs")
         }
@@ -30,6 +33,7 @@ export const login = async ({username, password,navigation}) => {
         else if(response.data.data.role=="admin"){
           navigation.navigate("AdminTabs")
         }
+       }
       })
    
       

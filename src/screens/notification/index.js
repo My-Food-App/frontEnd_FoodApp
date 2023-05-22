@@ -13,7 +13,7 @@ import {
   ActivityIndicator,
   Switch
 } from 'react-native';
-import Icon from 'react-native-vector-icons/AntDesign';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
@@ -23,120 +23,139 @@ import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {Button} from '../../components';
 import {MyModal} from '../../components';
 import {ScrollView} from 'react-native-gesture-handler';
-import {createPaymentIntent} from '../../api';
+import {getNotifications} from '../../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useStripe} from '@stripe/stripe-react-native';
 
-export function Notification() {
-  const {initPaymentSheet, presentPaymentSheet} = useStripe();
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSuccessful, setIsSuccessful] = useState(false);
+export function Notification({navigation}) {
+  const [notifications, setNotifications] = useState(null);
 
-
-  const LoadingView = () => {
-    return (
-      <View style={{ flex:1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
-    );
-  };
-  const [isEnabled, setIsEnabled] = useState(false);
-  const OnOffSwitch = () => {
+  useEffect(() => {
+      loaddingNotifi();
     
-  
-    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
-  
+  }, []);
+
+  const loaddingNotifi = async () =>{
+   const data = await getNotifications()
+   setNotifications(data)
+  }
+
+  // useEffect(() => {
+  //   AsyncStorage.getItem('zzzzzzzdade').then(result => {
+  //     console.log('==========', result);
+      
+  //   });
+  // }, [])
+
+  console.log('Notifi',notifications)
+ 
+
+  function renderHeader() {
     return (
-      <View style={{flexDirection: 'row', alignItems: 'center'}}>
-        <Switch
-          trackColor={{false: '#767577', true: '#81b0ff'}}
-          thumbColor={isEnabled ? '#f5dd4b' : '#f4f3f4'}
-          ios_backgroundColor="#3e3e3e"
-          onValueChange={toggleSwitch}
-          value={isEnabled}
-        />
-        <Text style={{marginLeft: 10}}>
-          {isEnabled ? 'On' : 'Off'}
+      <View style={styles.headerContainer}>
+        <TouchableOpacity style={{}} onPress={() => navigation.goBack()}>
+          <Icon name="arrow-left" size={30} color={COLOR.BLACK} />
+        </TouchableOpacity>
+        <Text style={{fontSize: 20, color: COLOR.BLACK, fontWeight: '600'}}>
+          Thông báo
         </Text>
+        <TouchableOpacity>
+          <Icon name="ellipsis-h" size={30} color={COLOR.BLACK} />
+        </TouchableOpacity>
       </View>
     );
-  };
-
-  const handleSuccess = () => {
-    setIsSuccessful(true);
-  };
-
-  const handleClose = () => {
-    setIsSuccessful(false);
-  };
-
-  const SuccessView = ({ message, onClose }) => {
-    useEffect(() => {
-      const timeoutId = setTimeout(() => {
-        onClose();
-      }, 2000);
-      return () => clearTimeout(timeoutId);
-    }, [onClose]);
-  
+  }
+  const renderNotifications = data => {
+    const itemSize = width - 30;
+    const renderItem = ({item, index}) => {
+      return (
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            marginLeft: SIZES.padding,
+            marginRight:20,
+            paddingRight:40,
+            flexDirection: 'row',
+            backgroundColor: COLOR.WHITE,
+            borderRadius: 20,
+            width: itemSize,
+            height: 80,
+            alignItems: 'center',
+            borderBottomWidth: 1,
+            borderColor: COLOR.lightGray5,
+          }}
+          onPress={() => {
+            // navigation.navigate('OrderDetail', {data: item});
+          }}>
+          <View
+            style={{
+              backgroundColor: COLOR.GREEN,
+              height: 60,
+              width: 60,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 10,
+            }}>
+            <Icon name="scroll" size={30} color={COLOR.WHITE} />
+          </View>
+          <View
+            style={{
+              flexDirection: 'column',
+              alignItems: 'flex-start',
+              height: 80,
+              marginHorizontal: 20,
+              justifyContent: 'center',
+            }}>
+            <Text style={FONTS.nameItem}>{item.name}</Text>
+            <Text style={{}}>
+              {item.value}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      );
+    };
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        {/* <Image
-          source={require('./success-icon.png')}
-          style={{ width: 100, height: 100, marginBottom: 20 }}
-        /> */}
-        <Text style={{ fontSize: 18 }}>{message}</Text>
+      <View style={{flex: 1}}>
+        {/* foods */}
+        <View style={{flex: 1, marginTop: SIZES.padding}}>
+          <FlatList
+            data={data}
+            renderItem={renderItem}
+            keyExtractor={item => `${item._id}`}
+            //              pagingEnabled
+            showsHorizontalScrollIndicator={false}
+          />
+        </View>
       </View>
     );
   };
-
-  const onCheckout = async () => {
-    // 1. Create a payment intent
-    const amount = 10000;
-    const response = await createPaymentIntent({amount})
-    console.log("A==",response)
-    if (response.error) {
-      Alert.alert('Lỗi thanh toán');
-      return;
-    }
-    // 2. Initialize the Payment sheet
-
-    const initResponse = await initPaymentSheet({
-      merchantDisplayName: 'Le Minh Hieu',
-      paymentIntentClientSecret: response.paymentIntent,
-      defaultBillingDetails: {
-        name: 'Jane Doe',
-      },
-    });
-    if (initResponse.error) {
-      Alert.alert('Lỗi thanh toán');
-      return;
-    }
-
-    // 3. Present the Payment Sheet from Stripe
-
-    await presentPaymentSheet()
-
-    // 4. If payment ok -> create the order
-  };
-
   return (
     <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
-        <OnOffSwitch/>
-      <TouchableOpacity
-        onPress={()=>{setIsSuccessful(true)}}
-        style={{backgroundColor: COLOR.MAIN}}>
-        <Text>Payment</Text>
-        
-      </TouchableOpacity>
-
-      {isSuccessful && (
-        <SuccessView message="Your action was successful!" onClose={handleClose} />
-      )}
+      style={styles.container}>
+      {renderHeader()}
+      {notifications && renderNotifications(notifications)}
     </View>
   );
 }
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: COLOR.WHITE,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: width,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    alignItems: 'center',
+    borderBottomColor: COLOR.lightGray3,
+    height: 50,
+    backgroundColor: COLOR.WHITE,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 10,
+    flex: 1,
+  },
+});

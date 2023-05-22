@@ -67,7 +67,8 @@ export const updateProduct = async ({
   price,
   image,
   discount,
-  category
+  category,
+  sold
 }) => {
   let data = JSON.stringify({
     id,
@@ -76,7 +77,8 @@ export const updateProduct = async ({
     price,
     image,
     discount,
-    category
+    category,
+    sold
   });
 
   let config = {
@@ -114,4 +116,15 @@ export const deleteProduct = async ({id}) =>{
   .catch((error) => {
     console.log(error);
   });
+}
+
+export const getProductById = async ({id}) =>{
+  let config = {
+    method: 'get',
+    maxBodyLength: Infinity,
+    url: `http://${ip}:3005/api/v1/products/${id}`,
+    headers: { }
+  };
+  value = (await axios(config)).data;
+  return value;
 }

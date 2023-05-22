@@ -15,6 +15,7 @@ import {
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import socket from '../../api/socket';
 
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {getUsers,searchAccount} from '../../api';
@@ -27,41 +28,58 @@ export function ManagerAccount({navigation}) {
   const [role, setRole] = useState('user');
   const [searchModalVisiable, setSearchModalVisiable] = useState(false);
   const [searchValue, setSearchValue] = useState('');
-  const [accountsSearch, setAccountsSearch] = useState([]);
-  useEffect(() => {
-    const fetchData = async () => {
-      const pr = await getUsers();
-      setAccounts(pr);
-    };
-    fetchData();
-  }, [role]);
+  const [accountsSearch, setAccountsSearch] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      
+     console.log('ACCOUNT ==========',);
+    fetchData();
+  }, [role,subTab]);
+
+  useEffect(() => { 
+    socket.on("LOAD_LIST_ACCOUNT", function () {
+      console.log('LOAD_LIST_ACCOUNT');
+      fetchData();
+    });
+  }, []);
+
+  useEffect(() => {
+   if(searchValue){
+    const fetchData = async () => {   
       const pr = await searchAccount({keyWord:searchValue});
       setAccountsSearch(pr);
     };
     fetchData();
+   }
   }, [searchValue]);
 
  // console.log('ACCOUNT ==========', accounts);
- console.log('ACCOUNTSearch ==========', accountsSearch);
+ //console.log('ACCOUNTSearch ==========', accountsSearch);
 
   useEffect(() => {
-   if(accountsSearch){
-    setAccountsWithRole(accountsSearch.filter(checkRole));
-    function checkRole(item) {
-      return item.role == role;
-    }
-   }
-   else{
+   if(!accountsSearch){
+    console.log('1111111111111111',);
     setAccountsWithRole(accounts.filter(checkRole));
     function checkRole(item) {
       return item.role == role;
     }
+
+   }
+
+   else{
+   
+    setAccountsWithRole(accountsSearch.filter(checkRole));
+    function checkRole(item) {
+      return item.role == role;
+      
+    }
+    console.log('22222222222222',);
   }
-  }, [accounts, role,accountsSearch]);
+  }, [accounts,role,accountsSearch,subTab]);
+
+  const fetchData = async () => {
+    const pr = await getUsers();
+    setAccounts(pr);
+  };
 
   function renderHeader() {
     return (
