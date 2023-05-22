@@ -19,4 +19,4 @@ export {getOrderById} from './order';
 export {getUserbyId, getUsers, deleteAccount,addShipper,updateAccount,searchAccount} from './user';
 export {calculateDelivery} from './delivery';
 export {createPaymentIntent} from './payment';
-export {createNotification,getByUserId,getNotifications} from './notification';
+export {createNotification,getNotyficationByUserId,getNotifications,updateNotification} from './notification';

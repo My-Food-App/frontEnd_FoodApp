@@ -11,7 +11,7 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
-  Switch
+  Switch,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
@@ -23,32 +23,50 @@ import {COLOR, SIZES, FONTS, icons} from '../../constants';
 import {Button} from '../../components';
 import {MyModal} from '../../components';
 import {ScrollView} from 'react-native-gesture-handler';
-import {getNotifications} from '../../api';
+import {getNotyficationByUserId} from '../../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {useStripe} from '@stripe/stripe-react-native';
+import socket from '../../api/socket';
 
 export function Notification({navigation}) {
   const [notifications, setNotifications] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-      loaddingNotifi();
-    
+    AsyncStorage.getItem('user').then(result => {
+      setUser(JSON.parse(result));
+    });
   }, []);
 
-  const loaddingNotifi = async () =>{
-   const data = await getNotifications()
-   setNotifications(data)
-  }
+  
+
+  useEffect(() => {
+    loaddingNotifi();
+  }, [user]);
+
+  useEffect(() => {
+    socket.on("LOAD_LIST_NOTIFICATION", function () {
+      loaddingNotifi();
+    });
+   
+  }, [user]);
+
+  const loaddingNotifi = async () => {
+    if (user) {
+      const userId = user._id;
+      const data = await getNotyficationByUserId({userId});
+      setNotifications(data);
+    }
+  };
 
   // useEffect(() => {
   //   AsyncStorage.getItem('zzzzzzzdade').then(result => {
   //     console.log('==========', result);
-      
+
   //   });
   // }, [])
 
-  console.log('Notifi',notifications)
- 
+  console.log('Notifi===============', notifications);
 
   function renderHeader() {
     return (
@@ -73,13 +91,13 @@ export function Notification({navigation}) {
           style={{
             flex: 1,
             marginLeft: SIZES.padding,
-            marginRight:20,
-            paddingRight:40,
+            marginRight: 20,
+            paddingRight: 40,
             flexDirection: 'row',
             backgroundColor: COLOR.WHITE,
             borderRadius: 20,
             width: itemSize,
-            height: 80,
+            height: 85,
             alignItems: 'center',
             borderBottomWidth: 1,
             borderColor: COLOR.lightGray5,
@@ -89,8 +107,8 @@ export function Notification({navigation}) {
           }}>
           <View
             style={{
-              backgroundColor: COLOR.GREEN,
-              height: 60,
+              backgroundColor: item.name === 'Có đơn đặt hàng mới' ? COLOR.MAIN:COLOR.GREEN,
+              height: 70,
               width: 60,
               alignItems: 'center',
               justifyContent: 'center',
@@ -107,9 +125,9 @@ export function Notification({navigation}) {
               justifyContent: 'center',
             }}>
             <Text style={FONTS.nameItem}>{item.name}</Text>
-            <Text style={{}}>
-              {item.value}
-            </Text>
+            <Text numberOfLines={2} style={{}}>{item.value}</Text>
+           
+            <Text style={{fontStyle:'italic',marginTop:3,alignSelf:'flex-end'}}> {moment(item.created_date).format('HH:mm DD-MM-YYYY')}</Text>
           </View>
         </TouchableOpacity>
       );
@@ -130,10 +148,11 @@ export function Notification({navigation}) {
     );
   };
   return (
-    <View
-      style={styles.container}>
+    <View style={styles.container}>
       {renderHeader()}
-      {notifications && renderNotifications(notifications)}
+     <ScrollView horizontal>
+     {notifications && renderNotifications(notifications.reverse())}
+     </ScrollView>
     </View>
   );
 }

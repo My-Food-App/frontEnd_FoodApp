@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {StyleSheet, Image, View, Text, TouchableOpacity} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {getNotifications} from '../../api';
+import {getNotyficationByUserId,updateNotification} from '../../api';
 import socket from '../../api/socket';
 
 import {COLOR, SIZES, FONTS, icons} from '../../constants';
@@ -13,34 +13,68 @@ const Tab = createBottomTabNavigator();
 export function Tabs() {
   const [notification, setNotification] = useState([]);
   const [notifi, setNotifi] = useState(0);
+  const [user, setUser] = useState(null);
+  const [notificationSeen, setNotificationSeen] = useState([]);
+  const [notificationNotSeen, setNotificationNotSeen] = useState([]);
+
+  useEffect(() => {
+    AsyncStorage.getItem('user').then(result => {
+      setUser(JSON.parse(result));
+    });
+  }, []);
 
   useEffect(() => {
     loaddingNotifications();
-  }, []);
+  }, [user]);
 
   useEffect(() => {  
     socket.on("LOAD_LIST_NOTIFICATION", function () {
+     if(user){
       loaddingNotifications();
+     }
     });
-  }, []);
+  }, [user]);
 
   const loaddingNotifications = async () => {
-    const data = await getNotifications();
+   if(user){
+    const userId = user._id
+    const data = await getNotyficationByUserId({userId});
     setNotification(data);
+   }
   };
 
-  useEffect(() => {
-    AsyncStorage.getItem('notifi').then(result => {
-      if (result != null) {
-        setNotifi(JSON.parse(result));
-      } else {
-        AsyncStorage.setItem('notifi', '0');
-        setNotifi(0);
-      }
-    });
-  }, []);
+  // useEffect(() => {
+  //   AsyncStorage.getItem('notifi').then(result => {
+  //     if (result != null) {
+  //       setNotifi(JSON.parse(result));
+  //     } else {
+  //       AsyncStorage.setItem('notifi', '0');
+  //       setNotifi(0);
+  //     }
+  //   });
+  // }, []);
 
-  console.log('======NOTYFI-----', notification.length);
+  useEffect(() => {
+    setNotificationSeen(notification.filter(checkStatus1));
+     function checkStatus1(item) {
+       return item.status == 'Đã xem';
+     }
+   }, [notification]);
+   useEffect(() => {
+    setNotificationNotSeen(notification.filter(checkStatus1));
+     function checkStatus1(item) {
+       return item.status == 'Chưa xem';
+     }
+   }, [notification]);
+
+  console.log('======NOTYFI-----Not', notificationNotSeen);
+ const  handleUpdateStatus = async (array) => {
+  for (let index = 0; index < array.length; index++) {
+    let id = array[index]._id
+    await updateNotification({id})
+  }
+
+ }
 
   return (
     <Tab.Navigator
@@ -75,7 +109,7 @@ export function Tabs() {
                       height: 25,
                     }}
                   />
-                 {(notification.length - notifi) != 0 &&  <View
+                 {(notification.length - notificationSeen.length) != 0 &&  <View
                     style={{
                       backgroundColor: 'red',
                       marginTop: -15,
@@ -86,7 +120,7 @@ export function Tabs() {
                       paddingHorizontal: 5,
                     }}>
                     <Text style={{color: COLOR.WHITE, fontSize: 12}}>
-                      {notification.length - notifi}
+                      {notification.length - notificationSeen.length}
                     </Text>
                   </View>}
                 </View>
@@ -125,9 +159,11 @@ export function Tabs() {
         name="Thông báo"
         component={Notification}
         listeners={{
-          tabPress: () => {
-            setNotifi(notification.length);
-            AsyncStorage.setItem('notifi', JSON.stringify(notification.length));
+          tabPress: async () => {
+          await  handleUpdateStatus(notificationNotSeen)
+          setTimeout(() => {
+            socket.emit('ADD_NOTIFICATION');
+          }, 1000)
           },
         }}
       />

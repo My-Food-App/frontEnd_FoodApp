@@ -17,7 +17,14 @@ import Fontisto from 'react-native-vector-icons/Fontisto';
 import {Dropdown} from 'react-native-element-dropdown';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import {COLOR, SIZES} from '../../constants';
-import {createOrder, calculateDelivery, createPaymentIntent,getProductById,updateProduct,createNotification} from '../../api';
+import {
+  createOrder,
+  calculateDelivery,
+  createPaymentIntent,
+  getProductById,
+  updateProduct,
+  createNotification,
+} from '../../api';
 import {useStripe} from '@stripe/stripe-react-native';
 const {width, height} = Dimensions.get('window');
 import {Button, MyModal} from '../../components';
@@ -152,18 +159,17 @@ export function Order({navigation}) {
   //   return accumulator + (current.price - (current.price / 100) * current.discount);
   // }
 
-  const handleSoldProduct = async ({id,quantity}) =>{
+  const handleSoldProduct = async ({id, quantity}) => {
     // const [product, setProduct] = useState(null)
-    const product = await getProductById({id})
+    const product = await getProductById({id});
     const sold = product.sold + quantity;
-    await updateProduct({id,sold})
-
-  }
-  const handleSoldListProduct = async (array) =>{
-    for(let i=0; i<array.length; i++){
-      await handleSoldProduct({id:array[i]._id, quantity:array[i].quantity})
+    await updateProduct({id, sold});
+  };
+  const handleSoldListProduct = async array => {
+    for (let i = 0; i < array.length; i++) {
+      await handleSoldProduct({id: array[i]._id, quantity: array[i].quantity});
     }
-  }
+  };
 
   function currencyFormat(num) {
     return num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,');
@@ -196,7 +202,7 @@ export function Order({navigation}) {
     // 3. Present the Payment Sheet from Stripe
 
     const pay = await presentPaymentSheet();
-  console.log('Payment Sheet ====================', pay)    
+    console.log('Payment Sheet ====================', pay);
 
     // 4. If payment ok -> create the order
 
@@ -212,7 +218,7 @@ export function Order({navigation}) {
     const created_date = new Date();
 
     socket.emit('CHANGE_ORDER');
-    
+
     await createOrder({
       userId,
       storeId,
@@ -225,9 +231,11 @@ export function Order({navigation}) {
       receiveAddress,
       deliveryAddress,
       created_date,
-    }).then(() => {
+    }).then(async () => {
       AsyncStorage.setItem('storeOrder', '{}');
       AsyncStorage.setItem('cart', '[]');
+      await handleCreateNotifiForStore();
+      await handleCreateNotifi();
       setModalVisible(true);
       setNewAddress('');
       socket.emit('ADD_ITEM_INTO_CART');
@@ -472,17 +480,34 @@ export function Order({navigation}) {
   };
 
   const handleCreateNotifi = async () => {
-    const userId = user._id;
-    const name = 'Đặt hàng thành công'
-    const value = 'Bạn đã đặt hàng thành công, đơn đặt hàng đả được gửi đến bên cung cấp sản phẩm'
-    const created_date = new Date();
+    if (user) {
+      const userId = user._id;
+      const name = 'Đặt hàng thành công';
+      const value = `Bạn đã đặt hàng thành công, đơn đặt hàng ${store.name} đả được gửi đến bên cung cấp sản phẩm`;
+      // let created_date = new Date();
 
-      await createNotification({name,value,userId,created_date})
+      await createNotification({name, value, userId, created_date:new Date()});
       setTimeout(() => {
         socket.emit('ADD_NOTIFICATION');
-      }, 1000)
-    console.log('Created notification')
-  }
+      }, 1000);
+    }
+    console.log('Created notification');
+  };
+  const handleCreateNotifiForStore = async () => {
+    if (user) {
+      const userId = store.userId;
+      const name = 'Có đơn đặt hàng mới';
+      const value =
+        'Cửa hàng của bạn vừa có một đơn đặt hàng mới, vui lòng kiểm tra chi tiết ở trong phần cửa hàng';
+    //  let created_date = new Date();
+
+      await createNotification({name, value, userId, created_date:new Date()});
+      setTimeout(() => {
+        socket.emit('ADD_NOTIFICATION');
+      }, 1000);
+    }
+    console.log('Created notification');
+  };
 
   function renderHeader() {
     return (
@@ -494,7 +519,9 @@ export function Order({navigation}) {
           Trang đặt hàng
         </Text>
         <TouchableOpacity
-          onPress={handleCreateNotifi}  
+        onPress={ async() => {
+       //  console.log(new Date());
+        }}
         >
           <Icon name="ellipsis-h" size={30} color={COLOR.BLACK} />
         </TouchableOpacity>
@@ -688,7 +715,7 @@ export function Order({navigation}) {
   }
   const handleOrder = async () => {
     // let [userId,storeId,name,products,shippingfee,totalPrice]  = [user._id,store._id,user.name,cart,fee,total+fee]
-   
+
     if (methodPayment == 'Thanh toán khi nhận hàng') {
       const userId = user._id;
       const storeId = store._id;
@@ -717,9 +744,11 @@ export function Order({navigation}) {
         setModalVisible(true);
         setNewAddress('');
       });
-      await handleSoldListProduct(cart)
+      await handleSoldListProduct(cart);
       AsyncStorage.setItem('storeOrder', '{}');
       AsyncStorage.setItem('cart', '[]');
+      await handleCreateNotifiForStore();
+      await handleCreateNotifi();
       socket.emit('ADD_ITEM_INTO_CART');
     } else if (methodPayment == 'Thẻ Visa/MasterCard') {
       if (total + fee >= 23000) {
@@ -733,7 +762,7 @@ export function Order({navigation}) {
   };
 
   const renderFooter = () => {
-    if(space){
+    if (space) {
       return (
         <View style={styles.footerContainer}>
           <View style={styles.totalPriceContainer}>
@@ -791,10 +820,10 @@ export function Order({navigation}) {
             </Text>
           </View>
           <TouchableOpacity
-          onPress={() =>{
-            setModalVisible(false)
-            navigation.navigate('Tabs');
-          }}
+            onPress={() => {
+              setModalVisible(false);
+              navigation.navigate('Tabs');
+            }}
             style={{
               height: 40,
               width: 70,

@@ -140,6 +140,7 @@ export const Account = ({navigation}) => {
   }, [user]);
 
   const handleLogout = async () => {
+    await AsyncStorage.setItem('notifi', '0');
     await AsyncStorage.setItem('cart', '[]').then(() => {
       navigation.navigate('Login');
     });
